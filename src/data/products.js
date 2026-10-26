@@ -22,34 +22,24 @@ import {
   WONDER_WEAVE,
 } from './images'
 
-const ALL_CATEGORIES = [
+/* The three shop sections, in the order they appear in the navbar. A category
+   with no products yet (Shalwar Kameez) still shows up and renders a
+   "coming soon" page; add products to it and they appear automatically. */
+export const CATEGORIES = [
   {
-    slug: 'stitched-women',
-    name: 'Stitched — Women',
-    short: 'Stitched Women',
-    audience: 'women',
+    slug: 'shalwar-kameez',
+    name: 'Shalwar Kameez',
+    short: 'Shalwar Kameez',
     type: 'stitched',
     tagline: 'Ready to wear, tailored to drape',
     description:
-      'Fully stitched three-piece and two-piece suits finished by our master tailors. Cut from the same fabrics as our unstitched line, then hemmed, lined and pressed so they are ready the moment they arrive.',
-    image: WIDE.womenLilac,
+      'Fully stitched shalwar kameez finished by our master tailors — hemmed, lined and pressed so it is ready the moment it arrives.',
+    image: WIDE.menWhite,
   },
   {
-    slug: 'unstitched-women',
-    name: 'Unstitched — Women',
-    short: 'Unstitched Women',
-    audience: 'women',
-    type: 'unstitched',
-    tagline: 'Fabric lengths for your own tailor',
-    description:
-      'Three-piece unstitched sets — shirt, dupatta and trouser lengths — printed and embroidered in limited runs. Take them to the tailor who already knows your measurements.',
-    image: WIDE.fabricShop,
-  },
-  {
-    slug: 'stitched-men',
-    name: 'Stitched — Men',
-    short: 'Stitched Men',
-    audience: 'men',
+    slug: 'sherwani',
+    name: 'Sherwani',
+    short: 'Sherwani',
     type: 'stitched',
     tagline: 'Embroidered sherwanis, ready to wear',
     description:
@@ -57,10 +47,9 @@ const ALL_CATEGORIES = [
     image: SHERWANI['Bottle Green'],
   },
   {
-    slug: 'unstitched-men',
-    name: 'Unstitched — Men',
-    short: 'Unstitched Men',
-    audience: 'men',
+    slug: 'unstitched',
+    name: 'Unstitched',
+    short: 'Unstitched',
     type: 'unstitched',
     tagline: 'Premium suiting by the length',
     description:
@@ -68,6 +57,12 @@ const ALL_CATEGORIES = [
     image: WIDE.fabricWarm,
   },
 ]
+
+/* Old links from when the shop was split by audience keep working. */
+const LEGACY_SLUGS = {
+  'stitched-men': 'sherwani',
+  'unstitched-men': 'unstitched',
+}
 
 export const SIZES_STITCHED = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 export const SIZES_UNSTITCHED = ['Standard (3 pc)', 'Large (3.5 pc)']
@@ -80,7 +75,7 @@ const LINES = [
     slug: 'sherwani',
     name: 'Embroidered Sherwani',
     short: 'Sherwani',
-    category: 'stitched-men',
+    category: 'sherwani',
     blurb: 'All-over embroidery, a structured band collar and engraved buttons — for weddings, Eid and formal evenings.',
     price: 30000,
     sizes: ['Small', 'Medium', 'Large'],
@@ -102,7 +97,7 @@ const LINES = [
     slug: 'wonder-weave',
     name: 'Wonder Weave',
     short: 'Wonder Weave',
-    category: 'unstitched-men',
+    category: 'unstitched',
     blurb: 'A smooth, fine-woven suiting with a soft drape, in four suit lengths.',
     // Starting price; the length chosen on the product page sets the real one.
     price: 4250,
@@ -127,7 +122,7 @@ const LINES = [
     slug: 'arch',
     name: 'Arch',
     short: 'Arch',
-    category: 'unstitched-men',
+    category: 'unstitched',
     blurb: 'Premium suiting with a smooth hand and a rich, even colour, in four suit lengths.',
     // Priced at 5400 for 4.25m (≈1271/m), other lengths rounded to the nearest 50.
     price: 5400,
@@ -152,7 +147,7 @@ const LINES = [
     slug: 'bareeze-suiting',
     name: 'Bareeze Suiting',
     short: 'Bareeze',
-    category: 'unstitched-men',
+    category: 'unstitched',
     blurb: 'Fine, smooth-draping suiting in twelve colours, in three suit lengths.',
     price: 5000,
     lengths: [
@@ -176,7 +171,7 @@ const LINES = [
     slug: 'supreme',
     name: 'Supreme',
     short: 'Supreme',
-    category: 'unstitched-men',
+    category: 'unstitched',
     blurb: 'A fine, smooth suiting in four classic whites, in three suit lengths.',
     price: 5000,
     lengths: [
@@ -200,7 +195,7 @@ const LINES = [
     slug: 'noor-ctn',
     name: 'Noor CTN',
     short: 'Noor CTN',
-    category: 'unstitched-men',
+    category: 'unstitched',
     blurb: 'Everyday suiting in twelve colours, in a single 4.5m suit length.',
     price: 3700,
     lengths: [{ label: '4.5m', price: 3700 }],
@@ -220,7 +215,7 @@ const LINES = [
     slug: 'lazio',
     name: 'Lazio',
     short: 'Lazio',
-    category: 'unstitched-men',
+    category: 'unstitched',
     blurb: 'Super fine 120s Egyptian Giza cotton with a liquid ammonia finish, presented in a gift box.',
     price: 14700,
     lengths: [{ label: '4.5m', price: 14700 }],
@@ -280,13 +275,13 @@ export const COLLECTIONS = LINES.map((line) => ({
   products: PRODUCTS.filter((p) => p.collection === line.slug),
 }))
 
-/* Only categories that have products are shown on the site.
-   Add a product to an empty one and it appears again automatically. */
-export const CATEGORIES = ALL_CATEGORIES.filter((c) => PRODUCTS.some((p) => p.category === c.slug))
-
 /* ——— Derived lookups ——— */
 
-export const getCategory = (slug) => CATEGORIES.find((c) => c.slug === slug)
+export const getCategory = (slug) =>
+  CATEGORIES.find((c) => c.slug === (LEGACY_SLUGS[slug] ?? slug))
+
+/** Cloths that belong to a category, in display order. */
+export const getCollectionsByCategory = (slug) => COLLECTIONS.filter((c) => c.category === slug)
 
 export const getCollection = (slug) => COLLECTIONS.find((c) => c.slug === slug)
 

@@ -3,19 +3,7 @@ import { Ruler } from 'lucide-react'
 import Breadcrumbs from '../components/Breadcrumbs'
 import Reveal from '../components/Reveal'
 
-const WOMEN_SIZES = {
-  headers: ['Size', 'Bust (in)', 'Waist (in)', 'Hip (in)', 'Shirt length (in)'],
-  rows: [
-    ['XS', '32', '26', '35', '38'],
-    ['S', '34', '28', '37', '39'],
-    ['M', '36', '30', '39', '40'],
-    ['L', '38', '32', '41', '41'],
-    ['XL', '40', '34', '43', '42'],
-    ['XXL', '42', '36', '45', '42'],
-  ],
-}
-
-const MEN_SIZES = {
+const SHALWAR_KAMEEZ = {
   headers: ['Size', 'Chest (in)', 'Collar (in)', 'Kameez length (in)', 'Shalwar length (in)'],
   rows: [
     ['XS', '36', '14.5', '40', '40'],
@@ -28,17 +16,17 @@ const MEN_SIZES = {
 }
 
 const UNSTITCHED = {
-  headers: ['Set', 'Shirt', 'Dupatta', 'Trouser', 'Suits'],
+  headers: ['Cloth', 'Lengths', 'Tailoring'],
   rows: [
-    ['Standard (3 pc)', '2.5 m', '2.5 m', '2.5 m', 'Up to size L'],
-    ['Large (3.5 pc)', '3.0 m', '2.5 m', '2.5 m', 'Size XL and above'],
-    ['Men — suit length', '4.5 m total', '—', 'Included', 'All sizes'],
+    ['Wonder Weave', '4.25 m · 4.5 m · 5 m · 5.5 m', 'Not included'],
+    ['Arch', '4.25 m · 4.5 m · 5 m · 5.5 m', 'Not included'],
+    ['Bareeze · Supreme', '4.5 m · 5 m · 5.5 m', 'Not included'],
+    ['Noor CTN · Lazio', '4.5 m', 'Not included'],
   ],
 }
 
 const TABS = [
-  { id: 'women', label: 'Women — stitched', table: WOMEN_SIZES },
-  { id: 'men', label: 'Men — stitched', table: MEN_SIZES },
+  { id: 'shalwar-kameez', label: 'Shalwar kameez', table: SHALWAR_KAMEEZ },
   { id: 'unstitched', label: 'Unstitched lengths', table: UNSTITCHED },
 ]
 
@@ -58,7 +46,7 @@ const TIPS = [
 ]
 
 export default function SizeGuide() {
-  const [tab, setTab] = useState('women')
+  const [tab, setTab] = useState('shalwar-kameez')
   const active = TABS.find((t) => t.id === tab)
 
   return (

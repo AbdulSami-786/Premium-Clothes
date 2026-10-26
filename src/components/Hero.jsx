@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -9,24 +9,24 @@ const SLIDES = [
     eyebrow: 'New in',
     title: 'The Embroidered\nSherwani',
     copy: 'All-over embroidery, a structured band collar and engraved buttons — made for weddings, Eid and formal evenings.',
-    cta: { label: 'Shop sherwani', to: '/category/stitched-men' },
+    cta: { label: 'Shop sherwani', to: '/category/sherwani' },
     alt: { label: 'Shop all', to: '/shop' },
     image: WIDE.womenLilac,
   },
   {
     eyebrow: 'Unstitched',
     title: 'The fabric.\nYour tailor.',
-    copy: 'Wonder Weave suiting in eight shades and four lengths, from 4.25m to 5.5m — cut to exactly what your tailor needs.',
-    cta: { label: 'Shop Wonder Weave', to: '/category/unstitched-men' },
+    copy: 'Premium suiting in a range of shades and four lengths, from 4.25m to 5.5m — cut to exactly what your tailor needs.',
+    cta: { label: 'Shop unstitched', to: '/category/unstitched' },
     alt: { label: 'Shop all', to: '/shop' },
     image: WIDE.fabricShop,
   },
   {
-    eyebrow: 'For Him',
-    title: 'Dressed for\nthe occasion',
-    copy: 'Ready-to-wear sherwanis and premium suit lengths, chosen for how they fall — not just how they photograph.',
-    cta: { label: 'Shop stitched', to: '/category/stitched-men' },
-    alt: { label: 'Suit lengths', to: '/category/unstitched-men' },
+    eyebrow: 'Shalwar Kameez',
+    title: 'Cut from the\nfinest cloth',
+    copy: 'Pick a premium suiting and have it stitched to your measurements, or shop our ready-to-wear shalwar kameez as it arrives.',
+    cta: { label: 'Shalwar kameez', to: '/category/shalwar-kameez' },
+    alt: { label: 'Unstitched', to: '/category/unstitched' },
     image: WIDE.menWhite,
   },
 ]
@@ -45,11 +45,28 @@ export default function Hero() {
     return () => clearInterval(timer)
   }, [index])
 
+  /* Horizontal swipe changes slide; vertical movement is left to page scroll. */
+  const touch = useRef(null)
+  const onTouchStart = (e) => {
+    touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+  const onTouchEnd = (e) => {
+    if (!touch.current) return
+    const dx = e.changedTouches[0].clientX - touch.current.x
+    const dy = e.changedTouches[0].clientY - touch.current.y
+    touch.current = null
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1)
+  }
+
   const go = (dir) => setIndex((i) => (i + dir + SLIDES.length) % SLIDES.length)
   const slide = SLIDES[index]
 
   return (
-    <section className="relative h-[92vh] min-h-[560px] overflow-hidden bg-ink-900">
+    <section
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      className="relative h-[calc(100svh-8rem)] min-h-[30rem] overflow-hidden bg-ink-900 sm:min-h-[34rem] lg:h-[92vh]"
+    >
       <motion.div style={{ y: imageY }} className="absolute inset-0 -top-[10%] h-[120%]">
         {SLIDES.map((s, i) => (
           <motion.img
@@ -73,7 +90,7 @@ export default function Hero() {
 
       <motion.div
         style={{ y: contentY, opacity: fade }}
-        className="container-px relative flex h-full items-center"
+        className="container-px relative flex h-full items-center pb-10"
       >
         <div className="max-w-2xl">
           <motion.p
@@ -91,7 +108,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 26 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-4 whitespace-pre-line text-4xl font-light leading-[1.08] text-white sm:text-6xl lg:text-7xl"
+            className="mt-3 whitespace-pre-line text-[2.5rem] font-light leading-[1.08] text-white sm:mt-4 sm:text-6xl lg:text-7xl"
           >
             {slide.title}
           </motion.h1>
@@ -101,7 +118,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.16 }}
-            className="mt-6 max-w-lg text-sm leading-relaxed text-ink-200 sm:text-base"
+            className="mt-4 max-w-lg text-sm leading-relaxed text-ink-200 sm:mt-6 sm:text-base"
           >
             {slide.copy}
           </motion.p>
@@ -111,7 +128,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.24 }}
-            className="mt-9 flex flex-wrap items-center gap-3"
+            className="mt-7 flex flex-wrap items-center gap-3 sm:mt-9"
           >
             <Link to={slide.cta.to} className="btn-gold group">
               {slide.cta.label}
@@ -127,7 +144,7 @@ export default function Hero() {
         </div>
       </motion.div>
 
-      <div className="container-px absolute inset-x-0 bottom-8 flex items-center justify-between">
+      <div className="container-px absolute inset-x-0 bottom-6 flex sm:bottom-8 items-center justify-between">
         <div className="flex gap-2.5">
           {SLIDES.map((s, i) => (
             <button

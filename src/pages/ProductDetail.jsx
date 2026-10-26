@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -54,9 +54,16 @@ function ProductView({ product }) {
   const [quantity, setQuantity] = useState(1)
   const [error, setError] = useState('')
   const [added, setAdded] = useState(false)
+  const sizeRef = useRef(null)
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
+  /* On phones the sticky buy bar replaces the bottom tab bar on this page. */
+  useEffect(() => {
+    document.body.classList.add('has-buy-bar')
+    return () => document.body.classList.remove('has-buy-bar')
   }, [])
 
   const category = getCategory(product.category)
@@ -72,6 +79,7 @@ function ProductView({ product }) {
   const handleAdd = () => {
     if (!size) {
       setError(category.type === 'stitched' ? 'Please choose a size first' : 'Please choose a length first')
+      sizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
     setError('')
@@ -81,7 +89,7 @@ function ProductView({ product }) {
   }
 
   return (
-    <div className="container-px py-8 lg:py-12">
+    <div className="container-px py-6 max-lg:pb-24 lg:py-12">
       <Breadcrumbs
         trail={[
           { label: category.short, to: `/category/${category.slug}` },
@@ -90,7 +98,7 @@ function ProductView({ product }) {
         ]}
       />
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-16">
+      <div className="mt-5 grid gap-8 lg:mt-8 lg:grid-cols-2 lg:gap-16">
         <Gallery
           images={product.images}
           name={product.name}
@@ -207,7 +215,7 @@ function ProductView({ product }) {
               </div>
             </div>
 
-            <div className="mt-6">
+            <div ref={sizeRef} className="mt-6 scroll-mt-28">
               <div className="mb-1.5 flex items-center justify-between">
                 <p className="label mb-0">
                   {category.type === 'stitched' ? 'Size' : 'Fabric length'}
@@ -230,7 +238,7 @@ function ProductView({ product }) {
                       setSize(s)
                       setError('')
                     }}
-                    className={`min-w-[3.25rem] rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 ${
+                    className={`min-h-11 min-w-[3.25rem] rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 ${
                       size === s
                         ? 'border-ink-900 bg-ink-900 text-white'
                         : 'border-ink-200 text-ink-600 hover:border-ink-900'
@@ -365,6 +373,14 @@ function ProductView({ product }) {
         </div>
       </div>
 
+      <BuyBar
+        price={price}
+        size={size}
+        added={added}
+        onAdd={handleAdd}
+        from={product.lengths?.length > 1 && !size}
+      />
+
       <ProductReviews product={product} />
 
       {related.length > 0 && (
@@ -386,7 +402,48 @@ function ProductView({ product }) {
   )
 }
 
+/** Sticky add-to-bag bar for phones; the in-page controls cover larger screens. */
+function BuyBar({ price, size, added, onAdd, from }) {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-4 border-t border-ink-100 bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl lg:hidden">
+      <div className="min-w-0">
+        <p className="font-display text-xl leading-none text-ink-900">
+          {from && <span className="mr-1 font-sans text-xs text-ink-400">From</span>}
+          {formatPrice(price)}
+        </p>
+        <p className="mt-1 truncate text-[0.68rem] text-ink-400">
+          {size ? size : 'Choose an option'}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onAdd}
+        className={`btn flex-1 ${
+          added ? 'bg-green-700 text-white' : 'bg-ink-900 text-white hover:bg-ink-700'
+        } active:scale-[0.98]`}
+      >
+        {added ? (
+          <>
+            <Check size={16} /> Added
+          </>
+        ) : (
+          <>
+            <ShoppingBag size={16} /> Add to bag
+          </>
+        )}
+      </button>
+    </div>
+  )
+}
+
 function Gallery({ images, name, active, setActive }) {
+  /* Swipe the main photo on touch screens; thumbnails remain for taps. */
+  const swipe = (_, info) => {
+    if (images.length < 2) return
+    if (info.offset.x < -60) setActive((active + 1) % images.length)
+    else if (info.offset.x > 60) setActive((active - 1 + images.length) % images.length)
+  }
+
   return (
     <div className="flex flex-col-reverse gap-4 sm:flex-row">
       <div
@@ -420,7 +477,11 @@ function Gallery({ images, name, active, setActive }) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="aspect-[3/4] w-full object-cover"
+            drag={images.length > 1 ? 'x' : false}
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.25}
+            onDragEnd={swipe}
+            className="aspect-[3/4] w-full touch-pan-y object-cover"
           />
         </AnimatePresence>
       </div>

@@ -35,7 +35,7 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="mt-24 bg-ink-950 text-ink-200">
+    <footer className="mt-16 bg-ink-950 pb-[calc(3.5rem+env(safe-area-inset-bottom))] text-ink-200 lg:mt-24 lg:pb-0">
       <Newsletter />
 
       <div className="container-px grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-5 lg:gap-8">
@@ -50,7 +50,7 @@ export default function Footer() {
           </Link>
 
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-ink-400">
-            Stitched and unstitched shalwar kameez, cut from fabrics we source
+            Shalwar kameez, sherwani and unstitched suiting, cut from fabrics we source
             ourselves and finished by tailors who have been with us for years.
           </p>
 
@@ -126,7 +126,7 @@ export default function Footer() {
           <p className="text-xs text-ink-500">
             © {new Date().getFullYear()} Premium Clothes. All rights reserved.
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {['Visa', 'Mastercard', 'EasyPaisa', 'JazzCash', 'COD'].map((method) => (
               <span
                 key={method}

@@ -15,7 +15,7 @@ import Hero from '../components/Hero'
 import ProductCard from '../components/ProductCard'
 import SectionHeading from '../components/SectionHeading'
 import Reveal, { RevealGroup, RevealItem } from '../components/Reveal'
-import { COLLECTIONS, getCategory, rangeLabel } from '../data/products'
+import { CATEGORIES, COLLECTIONS, PRODUCTS, getCategory, rangeLabel } from '../data/products'
 import { FABRIC, MEN, WIDE, WOMEN } from '../data/images'
 import { formatPrice } from '../utils/format'
 
@@ -24,6 +24,7 @@ export default function Home() {
     <>
       <Hero />
       <TrustStrip />
+      <CategoryTiles />
       <CollectionTiles />
       <CollectionRows />
       <CraftBanner />
@@ -72,10 +73,63 @@ function TrustStrip() {
   )
 }
 
+/** The three shop sections — the same tabs as the navbar, as big tappable tiles. */
+function CategoryTiles() {
+  return (
+    <section className="container-px pt-14 lg:pt-24">
+      <SectionHeading
+        eyebrow="Shop by category"
+        title="Find your style"
+        subtitle="Shalwar kameez, sherwani or fabric for your own tailor."
+      />
+
+      <div className="grid gap-3 sm:grid-cols-3 sm:gap-4 lg:gap-6">
+        {CATEGORIES.map((cat, i) => {
+          const count = PRODUCTS.filter((p) => p.category === cat.slug).length
+          return (
+            <motion.div
+              key={cat.slug}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Link
+                to={`/category/${cat.slug}`}
+                className="group relative block aspect-[16/10] overflow-hidden rounded-2xl bg-ink-900 ring-1 ring-ink-900/5 transition-shadow duration-500 hover:shadow-lift sm:aspect-[3/4]"
+              >
+                <img
+                  src={cat.image}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-[1100ms] ease-out group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink-950/85 via-ink-950/25 to-ink-950/5" />
+                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5 sm:p-6">
+                  <div>
+                    <p className="text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-gold-400">
+                      {count > 0 ? `${count} pieces` : 'Coming soon'}
+                    </p>
+                    <h3 className="mt-1.5 font-display text-3xl text-white">{cat.short}</h3>
+                    <p className="mt-1 text-xs text-ink-200">{cat.tagline}</p>
+                  </div>
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/40 text-white transition-all duration-300 group-hover:bg-white group-hover:text-ink-900">
+                    <ArrowRight size={17} />
+                  </span>
+                </div>
+              </Link>
+            </motion.div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 /** One tile per cloth; each jumps to that collection's row further down. */
 function CollectionTiles() {
   return (
-    <section className="container-px py-20 lg:py-28">
+    <section className="container-px py-16 lg:py-28">
       <SectionHeading
         eyebrow="Our collections"
         title="One cloth, every shade"
@@ -149,7 +203,7 @@ function CollectionRows() {
 
   return (
     <div className="bg-ink-50/60">
-      <div className="sticky top-[4.5rem] z-30 border-y border-ink-100 bg-white/90 backdrop-blur-xl">
+      <div className="sticky top-16 z-30 lg:top-[4.5rem] border-y border-ink-100 bg-white/90 backdrop-blur-xl">
         <nav
           aria-label="Collections"
           className="container-px no-scrollbar flex items-center gap-2 overflow-x-auto py-3"
@@ -159,7 +213,7 @@ function CollectionRows() {
               key={col.slug}
               href={`#${col.slug}`}
               aria-current={active === col.slug ? 'true' : undefined}
-              className={`relative shrink-0 rounded-full px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] transition-colors duration-300 ${
+              className={`relative shrink-0 rounded-full px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] transition-colors duration-300 ${
                 active === col.slug ? 'text-white' : 'text-ink-500 hover:text-ink-900'
               }`}
             >
@@ -217,7 +271,7 @@ function CollectionRow({ collection: col, index }) {
   return (
     <section
       id={col.slug}
-      className="scroll-mt-32 border-b border-ink-100 py-14 last:border-b-0 lg:py-20"
+      className="scroll-mt-28 border-b border-ink-100 py-12 last:border-b-0 lg:py-20"
     >
       <div className="container-px">
         <Reveal className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
@@ -280,7 +334,7 @@ function CollectionRow({ collection: col, index }) {
             key={p.id}
             product={p}
             index={i}
-            className="w-[44%] shrink-0 snap-start sm:w-[30%] lg:w-[calc(25%-1.125rem)]"
+            className="w-[62%] shrink-0 snap-start sm:w-[30%] lg:w-[calc(25%-1.125rem)]"
           />
         ))}
       </div>

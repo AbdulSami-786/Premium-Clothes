@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { SlidersHorizontal, X, Check, PackageOpen } from 'lucide-react'
+import { SlidersHorizontal, X, Check, PackageOpen, MessageCircle, Scissors } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import Breadcrumbs from '../components/Breadcrumbs'
 import Reveal from '../components/Reveal'
@@ -12,8 +12,10 @@ import {
   PRODUCTS,
   getCategory,
   getCollection,
+  getCollectionsByCategory,
 } from '../data/products'
 import { formatPrice } from '../utils/format'
+import { STORE } from '../data/config'
 import NotFound from './NotFound'
 
 const SORTS = [
@@ -36,7 +38,6 @@ export default function Shop({ mode = 'all' }) {
   const [sort, setSort] = useState('featured')
   const [lines, setLines] = useState([])
   const [types, setTypes] = useState([])
-  const [audiences, setAudiences] = useState([])
   const [maxPrice, setMaxPrice] = useState(PRICE_BOUNDS.max)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
@@ -55,7 +56,6 @@ export default function Shop({ mode = 'all' }) {
       }
       if (lines.length && !lines.includes(p.collection)) return false
       if (types.length && !types.includes(cat.type)) return false
-      if (audiences.length && !audiences.includes(cat.audience)) return false
       if (p.price > maxPrice) return false
       return true
     })
@@ -68,15 +68,17 @@ export default function Shop({ mode = 'all' }) {
       featured: (a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)),
     }
     return [...list].sort(sorters[sort])
-  }, [base, query, lines, types, audiences, maxPrice, sort])
+  }, [base, query, lines, types, maxPrice, sort])
+
+  /* A category with no products yet gets a dedicated page instead of an empty grid. */
+  const comingSoon = Boolean(category) && base.length === 0
 
   const activeCount =
-    lines.length + types.length + audiences.length + (maxPrice < PRICE_BOUNDS.max ? 1 : 0)
+    lines.length + types.length + (maxPrice < PRICE_BOUNDS.max ? 1 : 0)
 
   const clearAll = () => {
     setLines([])
     setTypes([])
-    setAudiences([])
     setMaxPrice(PRICE_BOUNDS.max)
   }
 
@@ -94,17 +96,15 @@ export default function Shop({ mode = 'all' }) {
     collection?.blurb ??
     (query
       ? `Showing everything matching your search.`
-      : 'The complete catalogue — stitched and unstitched, for women and men.')
+      : 'The complete catalogue — shalwar kameez, sherwani and unstitched suiting.')
 
   const filterProps = {
     lines,
     types,
-    audiences,
     maxPrice,
     setMaxPrice,
     toggleLine: toggle(setLines),
     toggleType: toggle(setTypes),
-    toggleAudience: toggle(setAudiences),
     clearAll,
     activeCount,
     showTypeFilters: !category,
@@ -151,31 +151,36 @@ export default function Shop({ mode = 'all' }) {
         </Reveal>
       )}
 
-      {/* Quick collection jump — keeps navigation available without the header. */}
-      <div className="no-scrollbar mt-8 flex gap-2 overflow-x-auto pb-1">
-        {[{ slug: null, short: 'All', to: '/shop' }, ...COLLECTIONS].map((c) => {
-          const current = c.slug ? collection?.slug === c.slug : !category && !collection
-          return (
-            <Link
-              key={c.short}
-              to={c.to ?? `/collection/${c.slug}`}
-              className={`flex shrink-0 items-center gap-2 rounded-full border h-9 text-xs font-medium transition-all duration-300 ${
-                c.image ? 'pl-1.5 pr-4' : 'px-4'
-              } ${
-                current
-                  ? 'border-ink-900 bg-ink-900 text-white'
-                  : 'border-ink-200 text-ink-600 hover:border-ink-900 hover:text-ink-900'
-              }`}
-            >
-              {c.image && (
-                <img src={c.image} alt="" className="h-6 w-6 rounded-full object-cover" />
-              )}
-              {c.short}
-            </Link>
-          )
-        })}
+      {/* Quick jump between categories and cloths — keeps navigation within reach on phones. */}
+      <div className="no-scrollbar -mx-5 mt-8 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:px-0">
+        <Chip to="/shop" current={!category && !collection}>
+          All
+        </Chip>
+        {CATEGORIES.map((c) => (
+          <Chip
+            key={c.slug}
+            to={`/category/${c.slug}`}
+            current={category?.slug === c.slug || collection?.category === c.slug}
+          >
+            {c.short}
+          </Chip>
+        ))}
+        <span aria-hidden="true" className="mx-1 w-px shrink-0 self-stretch bg-ink-100" />
+        {COLLECTIONS.map((c) => (
+          <Chip
+            key={c.slug}
+            to={`/collection/${c.slug}`}
+            current={collection?.slug === c.slug}
+            image={c.image}
+          >
+            {c.short}
+          </Chip>
+        ))}
       </div>
 
+      {comingSoon ? (
+        <ComingSoon category={category} />
+      ) : (
       <div className="mt-8 flex gap-10">
         <aside className="hidden w-60 shrink-0 lg:block">
           <FilterPanel {...filterProps} />
@@ -245,6 +250,7 @@ export default function Shop({ mode = 'all' }) {
           )}
         </div>
       </div>
+      )}
 
       <AnimatePresence>
         {filtersOpen && (
@@ -292,15 +298,68 @@ export default function Shop({ mode = 'all' }) {
   )
 }
 
+function Chip({ to, current, image, children }) {
+  return (
+    <Link
+      to={to}
+      aria-current={current ? 'page' : undefined}
+      className={`flex h-10 shrink-0 items-center gap-2 rounded-full border text-xs font-medium transition-all duration-300 sm:h-9 ${
+        image ? 'pl-1.5 pr-4' : 'px-4'
+      } ${
+        current
+          ? 'border-ink-900 bg-ink-900 text-white'
+          : 'border-ink-200 text-ink-600 hover:border-ink-900 hover:text-ink-900'
+      }`}
+    >
+      {image && <img src={image} alt="" className="h-6 w-6 rounded-full object-cover" />}
+      {children}
+    </Link>
+  )
+}
+
+/** Shown for a category that has no products yet. */
+function ComingSoon({ category }) {
+  const whatsapp = `https://wa.me/${STORE.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
+    `Hi, I'm interested in ${category.name}.`,
+  )}`
+  const cloths = getCollectionsByCategory('unstitched')
+
+  return (
+    <div className="mx-auto flex max-w-xl flex-col items-center gap-4 py-16 text-center sm:py-24">
+      <span className="grid h-16 w-16 place-items-center rounded-full bg-gold-50 text-gold-600">
+        <Scissors size={26} />
+      </span>
+      <p className="eyebrow">Coming soon</p>
+      <h2 className="font-display text-3xl text-ink-900 sm:text-4xl">
+        {category.name} is on the loom
+      </h2>
+      <p className="text-sm leading-relaxed text-ink-500">
+        Our ready-to-wear {category.name.toLowerCase()} range is being finished and will
+        appear here shortly. Until then you can choose any unstitched cloth and have it
+        tailored to your measurements — or message us and we will help you directly.
+      </p>
+      <div className="mt-2 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+        {cloths.length > 0 && (
+          <Link to="/category/unstitched" className="btn-primary">
+            Browse unstitched
+          </Link>
+        )}
+        <a href={whatsapp} target="_blank" rel="noreferrer noopener" className="btn-outline">
+          <MessageCircle size={15} />
+          Ask on WhatsApp
+        </a>
+      </div>
+    </div>
+  )
+}
+
 function FilterPanel({
   lines,
   types,
-  audiences,
   maxPrice,
   setMaxPrice,
   toggleLine,
   toggleType,
-  toggleAudience,
   clearAll,
   activeCount,
   showTypeFilters,
@@ -328,17 +387,6 @@ function FilterPanel({
                 label={t.charAt(0).toUpperCase() + t.slice(1)}
                 checked={types.includes(t)}
                 onChange={() => toggleType(t)}
-              />
-            ))}
-          </FilterGroup>
-
-          <FilterGroup title="For">
-            {[...new Set(CATEGORIES.map((c) => c.audience))].map((a) => (
-              <CheckRow
-                key={a}
-                label={a.charAt(0).toUpperCase() + a.slice(1)}
-                checked={audiences.includes(a)}
-                onChange={() => toggleAudience(a)}
               />
             ))}
           </FilterGroup>

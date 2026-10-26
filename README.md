@@ -21,7 +21,7 @@ wishlist need the Google Sheets backend — see **Backend** below.
 | --- | --- |
 | `/` | Home — hero slider, categories, featured products, collections, reviews |
 | `/shop` | Full catalogue with filters and sorting |
-| `/category/:slug` | One of the four categories |
+| `/category/:slug` | One of the three categories |
 | `/collection/:slug` | A seasonal collection |
 | `/product/:id` | Product detail, gallery, variants, reviews |
 | `/cart`, `/checkout`, `/order-confirmed` | Purchase flow |
@@ -34,8 +34,11 @@ Anything else renders the 404 page.
 
 ### Categories
 
-Stitched and unstitched, each for women and men — four categories in total,
-with 18 products spread across them.
+Three sections, matching the navbar tabs: **Shalwar Kameez**, **Sherwani** and
+**Unstitched**. Shalwar Kameez has no products yet, so its page shows a
+"coming soon" message; add a line with `category: 'shalwar-kameez'` in
+`src/data/products.js` and it fills in automatically. Old
+`/category/stitched-men` and `/category/unstitched-men` links still work.
 
 ## Changing the content
 
