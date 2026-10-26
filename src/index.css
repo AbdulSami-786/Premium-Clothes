@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --header-height: 4.5rem;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-ink-800 font-sans antialiased;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    @apply bg-gold-300 text-ink-900;
+  }
+
+  /* Slim, unobtrusive scrollbar that matches the palette. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-ink-50;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink-300 rounded-full border-2 border-ink-50;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-400;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold-500 ring-offset-2 ring-offset-white;
+  }
+}
+
+@layer components {
+  .container-px {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-7 py-3
+           text-xs font-semibold uppercase tracking-[0.18em] transition-all duration-300
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-ink-900 text-white hover:bg-ink-700 hover:shadow-lift active:scale-[0.97];
+  }
+
+  .btn-gold {
+    @apply btn bg-gold-500 text-ink-900 hover:bg-gold-400 hover:shadow-lift active:scale-[0.97];
+  }
+
+  .btn-outline {
+    @apply btn border border-ink-900 bg-transparent text-ink-900
+           hover:bg-ink-900 hover:text-white active:scale-[0.97];
+  }
+
+  .btn-ghost {
+    @apply btn border border-white/40 bg-white/10 text-white backdrop-blur
+           hover:bg-white hover:text-ink-900 active:scale-[0.97];
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm text-ink-800
+           placeholder:text-ink-300 transition-colors
+           focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900;
+  }
+
+  .label {
+    @apply mb-1.5 block text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-ink-500;
+  }
+
+  .eyebrow {
+    @apply text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-gold-600;
+  }
+
+  /* Animated underline used on nav links and inline text links. */
+  .link-underline {
+    @apply relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0
+           after:bg-current after:transition-all after:duration-300 hover:after:w-full;
+  }
+
+  .skeleton {
+    @apply bg-[linear-gradient(90deg,#eeeef0_25%,#f8f8f9_50%,#eeeef0_75%)]
+           bg-[length:200%_100%] animate-shimmer;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .mask-fade-r {
+    -webkit-mask-image: linear-gradient(to right, #000 80%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 80%, transparent 100%);
+  }
+}
+
+/* Respect users who ask the OS to reduce motion. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
