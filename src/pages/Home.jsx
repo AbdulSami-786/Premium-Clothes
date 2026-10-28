@@ -18,10 +18,8 @@ import { CATEGORIES, COLLECTIONS, PRODUCTS, getCategory, rangeLabel } from '../d
 import { FABRIC, MEN, WIDE, WOMEN } from '../data/images'
 import { formatPrice, FREE_SHIPPING_THRESHOLD } from '../utils/format'
 import { ONLINE_PAYMENTS, SOCIAL } from '../data/config'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function Home() {
-  usePageTitle()
   return (
     <>
       <Hero />

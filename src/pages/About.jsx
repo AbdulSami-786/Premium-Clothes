@@ -4,7 +4,6 @@ import { Leaf, Scissors, Sparkles, Users } from 'lucide-react'
 import Reveal, { RevealGroup, RevealItem } from '../components/Reveal'
 import SectionHeading from '../components/SectionHeading'
 import { FABRIC, WIDE, WOMEN } from '../data/images'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 const VALUES = [
   {
@@ -53,7 +52,6 @@ const TIMELINE = [
 ]
 
 export default function About() {
-  usePageTitle('Our story')
   return (
     <>
       <section className="relative h-[60vh] min-h-[420px] overflow-hidden bg-ink-900">

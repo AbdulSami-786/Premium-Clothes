@@ -6,7 +6,6 @@ import Reveal from '../components/Reveal'
 import Alert from '../components/Alert'
 import { api, apiConfigured } from '../utils/api'
 import { STORE, STORE_LINKS } from '../data/config'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 const CHANNELS = [
   {
@@ -43,7 +42,6 @@ const SUBJECTS = [
 ]
 
 export default function Contact() {
-  usePageTitle('Contact')
   const [form, setForm] = useState({
     name: '',
     email: '',

@@ -4,10 +4,8 @@ import Breadcrumbs from '../components/Breadcrumbs'
 import ProductCard from '../components/ProductCard'
 import { useShop } from '../context/ShopContext'
 import { getProduct } from '../data/products'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function Wishlist() {
-  usePageTitle('Wishlist')
   const { wishlist } = useShop()
   const products = wishlist.map(getProduct).filter(Boolean)
 

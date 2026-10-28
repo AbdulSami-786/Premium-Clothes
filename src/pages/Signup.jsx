@@ -8,7 +8,6 @@ import Alert from '../components/Alert'
 import BackendNotice from '../components/BackendNotice'
 import { useAuth } from '../context/AuthContext'
 import { WOMEN } from '../data/images'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 const PERKS = [
   'Track every order from one place',
@@ -18,7 +17,6 @@ const PERKS = [
 ]
 
 export default function Signup() {
-  usePageTitle('Create account')
   const { signUp, apiConfigured, isAuthed } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()

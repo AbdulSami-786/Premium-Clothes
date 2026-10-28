@@ -4,3 +4,8 @@ Disallow: /cart
 Disallow: /checkout
 Disallow: /account
 Disallow: /order-confirmed
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+
+Sitemap: https://premiumclothhouse.store/sitemap.xml

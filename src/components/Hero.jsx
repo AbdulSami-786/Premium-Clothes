@@ -74,6 +74,9 @@ export default function Hero() {
             src={s.image}
             alt=""
             aria-hidden={i !== index}
+            // Only the first slide is on screen at load; the rest can wait.
+            loading={i === 0 ? 'eager' : 'lazy'}
+            fetchPriority={i === 0 ? 'high' : 'auto'}
             initial={false}
             animate={{
               opacity: i === index ? 1 : 0,

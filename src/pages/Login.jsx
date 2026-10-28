@@ -7,10 +7,8 @@ import Alert from '../components/Alert'
 import BackendNotice from '../components/BackendNotice'
 import { useAuth } from '../context/AuthContext'
 import { WOMEN } from '../data/images'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function Login() {
-  usePageTitle('Sign in')
   const { signIn, apiConfigured, isAuthed } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()

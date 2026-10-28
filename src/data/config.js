@@ -24,6 +24,9 @@ export const API_URL =
   import.meta.env.VITE_API_URL ??
   'https://script.google.com/macros/s/AKfycbwkk_8GD9Pyv1puYgOPajc0p8EXEW4ObcefVAG62Pn5T-wZ32vTENX4UTHENlv2_W9DIQ/exec'
 
+/** The public address of the live site — used for canonical links, the sitemap and social previews. */
+export const SITE_URL = 'https://premiumclothhouse.store'
+
 /** Store details used across the site — edit them here and every page follows. */
 export const STORE = {
   name: 'Premium Clothes',

@@ -30,13 +30,11 @@ import {
   priceFor,
 } from '../data/products'
 import { formatPrice, discountPercent, FREE_SHIPPING_THRESHOLD } from '../utils/format'
-import { usePageTitle } from '../hooks/usePageTitle'
 import { ONLINE_PAYMENTS } from '../data/config'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const product = getProduct(id)
-  usePageTitle(product?.name ?? 'Page not found')
 
   if (!product) return <NotFound />
 

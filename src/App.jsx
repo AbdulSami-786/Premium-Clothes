@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 import { ShopProvider } from './context/ShopContext'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import RouteSeo from './components/RouteSeo'
 import CartDrawer from './components/CartDrawer'
 import { BackToTop, ScrollRestoration } from './components/ScrollToTop'
 import Home from './pages/Home'
@@ -59,6 +60,7 @@ export default function App() {
     <AuthProvider>
       <ShopProvider>
         <ScrollRestoration />
+        <RouteSeo />
         <Header />
 
         <Suspense fallback={<RouteFallback />}>

@@ -132,6 +132,28 @@ unpublish it. Download the Newsletter tab to export your mailing list.
 7. Home-page claims you have not confirmed (the "24 years" and timeline on the
    About page, the "eleven pairs of hands" banner) are yours to verify.
 
+## SEO
+
+The live address is set once, as `SITE_URL` in `src/data/config.js`
+(`https://premiumclothhouse.store`). Every URL's title, description, preview
+image and structured data come from one function, `routeMeta()` in
+`src/data/seo.js`.
+
+`npm run build` does two things: builds the app, then
+`scripts/prerender.mjs` writes a static HTML page for each indexable URL (so
+Google, WhatsApp and Facebook read the right tags without running JavaScript),
+plus `sitemap.xml` and `robots.txt`. A new product or collection is picked up
+automatically on the next build — no SEO file to edit. Always deploy with
+`npm run build`, not `build:app`.
+
+- Cart, checkout, account, sign-in, search results and unknown URLs are
+  `noindex`; a category with no products stays `noindex` until it has some.
+- Products carry Product structured data with price and availability; no
+  ratings are published until real reviews exist.
+- After going live, add the site in Google Search Console, submit
+  `https://premiumclothhouse.store/sitemap.xml`, and add a Google Business
+  Profile for the Tariq Road shop once its real address is confirmed.
+
 ## What is not wired up
 
 - **Payment.** Orders are recorded, not charged. Cash on delivery works as-is;

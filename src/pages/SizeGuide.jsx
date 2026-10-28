@@ -3,7 +3,6 @@ import { Ruler } from 'lucide-react'
 import Breadcrumbs from '../components/Breadcrumbs'
 import Reveal from '../components/Reveal'
 import { STORE } from '../data/config'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 const SHALWAR_KAMEEZ = {
   headers: ['Size', 'Chest (in)', 'Collar (in)', 'Kameez length (in)', 'Shalwar length (in)'],
@@ -48,7 +47,6 @@ const TIPS = [
 ]
 
 export default function SizeGuide() {
-  usePageTitle('Size guide')
   const [tab, setTab] = useState('shalwar-kameez')
   const active = TABS.find((t) => t.id === tab)
 

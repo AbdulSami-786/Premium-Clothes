@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import { Check, Package, Mail, MapPin } from 'lucide-react'
 import { formatPrice } from '../utils/format'
 import { apiConfigured } from '../utils/api'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 const PAYMENT_LABELS = {
   cod: 'Cash on delivery',
@@ -32,7 +31,6 @@ const paymentSummary = (method) =>
       : 'Confirmed'
 
 export default function OrderConfirmed() {
-  usePageTitle('Order confirmed')
   const location = useLocation()
   const [order] = useState(() => location.state?.order ?? readStoredOrder())
 

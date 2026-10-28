@@ -17,7 +17,6 @@ import {
 import { formatPrice } from '../utils/format'
 import { STORE_LINKS } from '../data/config'
 import NotFound from './NotFound'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 const HAS_RATINGS = PRODUCTS.some((p) => p.rating > 0)
 
@@ -91,7 +90,6 @@ export default function Shop({ mode = 'all' }) {
 
   const missing = (mode === 'category' && !category) || (mode === 'collection' && !collection)
   const heading = category?.name ?? collection?.name ?? (query ? `“${query}”` : 'All Products')
-  usePageTitle(missing ? 'Page not found' : heading)
 
   // An unknown category or collection has nothing to show, so its link 404s.
   if (missing) return <NotFound />

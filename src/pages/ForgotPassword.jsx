@@ -7,7 +7,6 @@ import FormField from '../components/FormField'
 import Alert from '../components/Alert'
 import BackendNotice from '../components/BackendNotice'
 import { api, apiConfigured } from '../utils/api'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 const STEPS = [
   { key: 'email', label: 'Your email', icon: Mail },
@@ -16,7 +15,6 @@ const STEPS = [
 ]
 
 export default function ForgotPassword() {
-  usePageTitle('Reset password')
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [email, setEmail] = useState('')

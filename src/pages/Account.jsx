@@ -17,7 +17,6 @@ import OrderCard from '../components/OrderCard'
 import { useAuth } from '../context/AuthContext'
 import { useShop } from '../context/ShopContext'
 import { api, apiConfigured } from '../utils/api'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 const TABS = [
   { id: 'orders', label: 'Orders', icon: Package },
@@ -26,7 +25,6 @@ const TABS = [
 ]
 
 export default function Account() {
-  usePageTitle('Account')
   const { user, ready, isAuthed, signOut } = useAuth()
   const navigate = useNavigate()
   const [requestedTab, setTab] = useState('orders')

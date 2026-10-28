@@ -9,7 +9,6 @@ import { useAuth } from '../context/AuthContext'
 import { api, apiConfigured } from '../utils/api'
 import { formatPrice } from '../utils/format'
 import { ONLINE_PAYMENTS } from '../data/config'
-import { usePageTitle } from '../hooks/usePageTitle'
 
 const STEPS = ['Contact', 'Delivery', 'Payment']
 
@@ -101,7 +100,6 @@ const formatExpiry = (value) => {
 
 /** Waits for the stored session to be checked so the form can be pre-filled once. */
 export default function Checkout() {
-  usePageTitle('Checkout')
   const { ready } = useAuth()
 
   if (!ready) {
