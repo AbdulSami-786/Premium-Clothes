@@ -8,10 +8,12 @@ import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
 import { api, apiConfigured } from '../utils/api'
 import { formatPrice } from '../utils/format'
+import { ONLINE_PAYMENTS } from '../data/config'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const STEPS = ['Contact', 'Delivery', 'Payment']
 
-const PAYMENT_METHODS = [
+const ALL_PAYMENT_METHODS = [
   {
     id: 'cod',
     icon: Banknote,
@@ -31,6 +33,9 @@ const PAYMENT_METHODS = [
     hint: 'Confirm the payment on your phone',
   },
 ]
+
+/* Online methods stay hidden until a gateway is connected — see ONLINE_PAYMENTS. */
+const PAYMENT_METHODS = ALL_PAYMENT_METHODS.filter((m) => ONLINE_PAYMENTS || m.id === 'cod')
 
 const CITIES = [
   'Karachi',
@@ -60,7 +65,56 @@ const EMPTY_FORM = {
   cardCvc: '',
 }
 
+const digitsOnly = (value) => value.replace(/\D/g, '')
+
+/** Standard card-number checksum, so a mistyped digit is caught before submitting. */
+const passesLuhn = (number) => {
+  let sum = 0
+  let double = false
+  for (let i = number.length - 1; i >= 0; i--) {
+    let digit = Number(number[i])
+    if (double) {
+      digit *= 2
+      if (digit > 9) digit -= 9
+    }
+    sum += digit
+    double = !double
+  }
+  return sum % 10 === 0
+}
+
+const expiryInPast = (mm, yy) => {
+  const now = new Date()
+  const year = 2000 + Number(yy)
+  const month = Number(mm)
+  return year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1)
+}
+
+/* Typing helpers: keep only digits and add the separators as the shopper types. */
+const formatCardNumber = (value) =>
+  digitsOnly(value).slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ')
+
+const formatExpiry = (value) => {
+  const d = digitsOnly(value).slice(0, 4)
+  return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d
+}
+
+/** Waits for the stored session to be checked so the form can be pre-filled once. */
 export default function Checkout() {
+  usePageTitle('Checkout')
+  const { ready } = useAuth()
+
+  if (!ready) {
+    return (
+      <div className="container-px flex min-h-[50vh] items-center justify-center">
+        <span className="h-8 w-8 animate-spin rounded-full border-2 border-ink-200 border-t-ink-900" />
+      </div>
+    )
+  }
+  return <CheckoutForm />
+}
+
+function CheckoutForm() {
   const { items, totals, clearCart } = useShop()
   const { token, user } = useAuth()
   const navigate = useNavigate()
@@ -83,6 +137,12 @@ export default function Checkout() {
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev))
   }
 
+  const setFormatted = (field, format) => (e) => {
+    const value = format(e.target.value)
+    setForm((f) => ({ ...f, [field]: value }))
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev))
+  }
+
   /* Validation runs per step so the shopper is never shown errors for fields
      they have not reached yet. */
   const validateStep = (index) => {
@@ -98,10 +158,15 @@ export default function Checkout() {
       if (form.address.trim().length < 8) next.address = 'Enter your full street address'
     }
     if (index === 2 && form.payment === 'card') {
-      if (form.cardNumber.replace(/\s/g, '').length < 15)
+      const number = digitsOnly(form.cardNumber)
+      if (number.length < 13 || number.length > 19 || !passesLuhn(number))
         next.cardNumber = 'Enter a valid card number'
-      if (!/^\d{2}\/\d{2}$/.test(form.cardExpiry)) next.cardExpiry = 'MM/YY'
-      if (form.cardCvc.length < 3) next.cardCvc = '3 digits'
+
+      const expiry = /^(0[1-9]|1[0-2])\/(\d{2})$/.exec(form.cardExpiry)
+      if (!expiry) next.cardExpiry = 'Use MM/YY'
+      else if (expiryInPast(expiry[1], expiry[2])) next.cardExpiry = 'Card has expired'
+
+      if (!/^\d{3,4}$/.test(form.cardCvc)) next.cardCvc = '3 or 4 digits'
     }
     setErrors(next)
     return Object.keys(next).length === 0
@@ -415,7 +480,7 @@ export default function Checkout() {
                             label="Card number"
                             error={errors.cardNumber}
                             value={form.cardNumber}
-                            onChange={set('cardNumber')}
+                            onChange={setFormatted('cardNumber', formatCardNumber)}
                             placeholder="4242 4242 4242 4242"
                             inputMode="numeric"
                             autoComplete="cc-number"
@@ -425,15 +490,16 @@ export default function Checkout() {
                               label="Expiry"
                               error={errors.cardExpiry}
                               value={form.cardExpiry}
-                              onChange={set('cardExpiry')}
+                              onChange={setFormatted('cardExpiry', formatExpiry)}
                               placeholder="MM/YY"
+                              inputMode="numeric"
                               autoComplete="cc-exp"
                             />
                             <Field
                               label="CVC"
                               error={errors.cardCvc}
                               value={form.cardCvc}
-                              onChange={set('cardCvc')}
+                              onChange={setFormatted('cardCvc', (v) => digitsOnly(v).slice(0, 4))}
                               placeholder="123"
                               inputMode="numeric"
                               autoComplete="cc-csc"
@@ -447,6 +513,13 @@ export default function Checkout() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+
+                  {form.payment === 'wallet' && (
+                    <p className="flex items-center gap-2 text-xs text-ink-400">
+                      <Lock size={12} />
+                      This demo does not process real payments.
+                    </p>
+                  )}
                 </StepPanel>
               )}
             </AnimatePresence>
@@ -455,6 +528,13 @@ export default function Checkout() {
               <Alert tone="error" className="mt-6">
                 {submitError} Your bag has been kept, so nothing is lost.
               </Alert>
+            )}
+
+            {/* Gives Enter something to submit on the first two steps, where the
+                visible button is a plain "Continue". placeOrder treats it as
+                "advance", never as "place the order". */}
+            {step < 2 && (
+              <button key="enter" type="submit" tabIndex={-1} aria-hidden="true" className="sr-only" />
             )}
 
             <div className="mt-8 flex flex-wrap items-center gap-3">

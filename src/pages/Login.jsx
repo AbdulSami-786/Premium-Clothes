@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Breadcrumbs from '../components/Breadcrumbs'
 import FormField from '../components/FormField'
@@ -7,9 +7,11 @@ import Alert from '../components/Alert'
 import BackendNotice from '../components/BackendNotice'
 import { useAuth } from '../context/AuthContext'
 import { WOMEN } from '../data/images'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function Login() {
-  const { signIn, apiConfigured } = useAuth()
+  usePageTitle('Sign in')
+  const { signIn, apiConfigured, isAuthed } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -48,6 +50,9 @@ export default function Login() {
       setBusy(false)
     }
   }
+
+  /* Someone who is already signed in has no use for this page. */
+  if (isAuthed) return <Navigate to={next} replace />
 
   return (
     <div className="container-px py-8 lg:py-12">

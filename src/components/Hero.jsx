@@ -11,7 +11,7 @@ const SLIDES = [
     copy: 'All-over embroidery, a structured band collar and engraved buttons — made for weddings, Eid and formal evenings.',
     cta: { label: 'Shop sherwani', to: '/category/sherwani' },
     alt: { label: 'Shop all', to: '/shop' },
-    image: WIDE.womenLilac,
+    image: WIDE.sherwani,
   },
   {
     eyebrow: 'Unstitched',

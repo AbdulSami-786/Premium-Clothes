@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check, Package, Mail, MapPin } from 'lucide-react'
 import { formatPrice } from '../utils/format'
+import { apiConfigured } from '../utils/api'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const PAYMENT_LABELS = {
   cod: 'Cash on delivery',
@@ -10,20 +12,29 @@ const PAYMENT_LABELS = {
   wallet: 'Mobile wallet',
 }
 
-export default function OrderConfirmed() {
-  const location = useLocation()
-  const [order, setOrder] = useState(location.state?.order ?? null)
+/** Router state is lost on refresh, so fall back to the copy checkout stored. */
+function readStoredOrder() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem('pc.lastOrder'))
+    // Ignore anything that is not shaped like an order rather than crash on it.
+    return stored?.customer && stored?.totals && Array.isArray(stored?.items) ? stored : null
+  } catch {
+    return null
+  }
+}
 
-  /* Router state is lost on refresh, so fall back to the stored copy. */
-  useEffect(() => {
-    if (order) return
-    try {
-      const stored = window.localStorage.getItem('pc.lastOrder')
-      if (stored) setOrder(JSON.parse(stored))
-    } catch {
-      /* Nothing recoverable — the generic message below is shown instead. */
-    }
-  }, [order])
+/* Only cash on delivery is settled in person; online methods are not charged by the site. */
+const paymentSummary = (method) =>
+  method === 'cod'
+    ? PAYMENT_LABELS.cod
+    : PAYMENT_LABELS[method]
+      ? `${PAYMENT_LABELS[method]} · not charged yet`
+      : 'Confirmed'
+
+export default function OrderConfirmed() {
+  usePageTitle('Order confirmed')
+  const location = useLocation()
+  const [order] = useState(() => location.state?.order ?? readStoredOrder())
 
   if (!order) {
     return (
@@ -72,8 +83,15 @@ export default function OrderConfirmed() {
             Thank you, {order.customer.name.split(' ')[0]}
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-500">
-            Your order is confirmed. We have sent the details to{' '}
-            <span className="font-medium text-ink-900">{order.customer.email}</span>.
+            Your order is confirmed.{' '}
+            {apiConfigured ? (
+              <>
+                We have sent the details to{' '}
+                <span className="font-medium text-ink-900">{order.customer.email}</span>.
+              </>
+            ) : (
+              'Keep your order number to hand if you contact us.'
+            )}
           </p>
           <p className="mt-5 inline-block rounded-full bg-ink-50 px-5 py-2 text-sm">
             Order number{' '}
@@ -93,7 +111,7 @@ export default function OrderConfirmed() {
             {
               icon: Mail,
               title: 'Payment',
-              value: PAYMENT_LABELS[order.payment] ?? 'Confirmed',
+              value: paymentSummary(order.payment),
             },
           ].map(({ icon: Icon, title, value }) => (
             <div
@@ -128,7 +146,7 @@ export default function OrderConfirmed() {
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-ink-900">
-                  {formatPrice(item.lineTotal)}
+                  {formatPrice(item.lineTotal ?? item.unitPrice * item.quantity)}
                 </span>
               </li>
             ))}
@@ -146,7 +164,9 @@ export default function OrderConfirmed() {
               </dd>
             </div>
             <div className="flex justify-between border-t border-ink-100 pt-3">
-              <dt className="font-display text-lg text-ink-900">Total paid</dt>
+              <dt className="font-display text-lg text-ink-900">
+                {order.payment === 'cod' ? 'Total due on delivery' : 'Order total'}
+              </dt>
               <dd className="font-display text-lg text-ink-900">
                 {formatPrice(order.totals.total)}
               </dd>

@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useInView, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
-  Quote,
   RefreshCw,
   Scissors,
   ShieldCheck,
@@ -17,9 +16,12 @@ import SectionHeading from '../components/SectionHeading'
 import Reveal, { RevealGroup, RevealItem } from '../components/Reveal'
 import { CATEGORIES, COLLECTIONS, PRODUCTS, getCategory, rangeLabel } from '../data/products'
 import { FABRIC, MEN, WIDE, WOMEN } from '../data/images'
-import { formatPrice } from '../utils/format'
+import { formatPrice, FREE_SHIPPING_THRESHOLD } from '../utils/format'
+import { ONLINE_PAYMENTS, SOCIAL } from '../data/config'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function Home() {
+  usePageTitle()
   return (
     <>
       <Hero />
@@ -28,8 +30,6 @@ export default function Home() {
       <CollectionTiles />
       <CollectionRows />
       <CraftBanner />
-      <StatsBand />
-      <Testimonials />
       <InstagramStrip />
     </>
   )
@@ -45,9 +45,17 @@ function collectionMeta(col) {
 /* ——————————————————————————————————————— */
 
 const TRUST = [
-  { icon: Truck, title: 'Free delivery', copy: 'On every order over PKR 10,000' },
+  {
+    icon: Truck,
+    title: 'Free delivery',
+    copy: `On every order over ${formatPrice(FREE_SHIPPING_THRESHOLD)}`,
+  },
   { icon: RefreshCw, title: '7-day exchange', copy: 'On all stitched pieces' },
-  { icon: ShieldCheck, title: 'Secure checkout', copy: 'Card, wallet or cash on delivery' },
+  {
+    icon: ShieldCheck,
+    title: ONLINE_PAYMENTS ? 'Secure checkout' : 'Cash on delivery',
+    copy: ONLINE_PAYMENTS ? 'Card, wallet or cash on delivery' : 'Pay when your order arrives',
+  },
   { icon: Scissors, title: 'Tailoring add-on', copy: 'Stitching available on request' },
 ]
 
@@ -401,124 +409,6 @@ function CraftBanner() {
   )
 }
 
-const STATS = [
-  { value: 18, suffix: 'k+', label: 'Orders delivered' },
-  { value: 24, suffix: '', label: 'Years of tailoring' },
-  { value: 96, suffix: '%', label: 'Would order again' },
-  { value: 40, suffix: '+', label: 'Cities shipped to' },
-]
-
-function StatsBand() {
-  return (
-    <section className="bg-ink-900 py-16">
-      <div className="container-px grid grid-cols-2 gap-8 lg:grid-cols-4">
-        {STATS.map((stat, i) => (
-          <Counter key={stat.label} {...stat} delay={i * 0.1} />
-        ))}
-      </div>
-    </section>
-  )
-}
-
-/** Counts up once, the first time it scrolls into view. */
-function Counter({ value, suffix, label, delay }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
-  const [display, setDisplay] = useState(0)
-
-  useEffect(() => {
-    if (!inView) return
-    let frame
-    const duration = 1400
-    const start = performance.now() + delay * 1000
-
-    const tick = (now) => {
-      const elapsed = now - start
-      if (elapsed < 0) {
-        frame = requestAnimationFrame(tick)
-        return
-      }
-      const progress = Math.min(elapsed / duration, 1)
-      // Ease-out so the number decelerates into its final value.
-      setDisplay(Math.round(value * (1 - Math.pow(1 - progress, 3))))
-      if (progress < 1) frame = requestAnimationFrame(tick)
-    }
-
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [inView, value, delay])
-
-  return (
-    <div ref={ref} className="text-center">
-      <p className="font-display text-4xl text-gold-400 sm:text-5xl">
-        {display}
-        {suffix}
-      </p>
-      <p className="mt-2 text-[0.68rem] font-medium uppercase tracking-[0.2em] text-ink-400">
-        {label}
-      </p>
-    </div>
-  )
-}
-
-const REVIEWS = [
-  {
-    name: 'Ayesha K.',
-    city: 'Lahore',
-    text: 'The stitching is the part that surprised me. I usually get suits altered after they arrive — this one fit straight out of the packaging.',
-    rating: 5,
-  },
-  {
-    name: 'Usman R.',
-    city: 'Karachi',
-    text: 'Ordered the wash and wear lengths for three suits. Same shade across all three, which is more than I can say for the shops near me.',
-    rating: 5,
-  },
-  {
-    name: 'Fatima S.',
-    city: 'Islamabad',
-    text: 'The embroidered lawn is genuinely soft, not the stiff kind. Wore it through a full summer wedding and it held up.',
-    rating: 5,
-  },
-]
-
-function Testimonials() {
-  return (
-    <section className="container-px py-20 lg:py-28">
-      <SectionHeading
-        eyebrow="Reviews"
-        title="What customers tell us"
-        subtitle="Collected from verified orders over the last twelve months."
-      />
-
-      <RevealGroup className="grid gap-5 lg:grid-cols-3" stagger={0.12}>
-        {REVIEWS.map((r) => (
-          <RevealItem
-            key={r.name}
-            className="group relative rounded-2xl border border-ink-100 bg-white p-7 transition-all duration-500 hover:-translate-y-1.5 hover:border-gold-200 hover:shadow-lift"
-          >
-            <Quote size={30} className="text-gold-200" />
-            <p className="mt-5 text-sm leading-relaxed text-ink-600">{r.text}</p>
-
-            <div className="mt-6 flex items-center gap-3 border-t border-ink-50 pt-5">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-ink-900 font-display text-sm text-white">
-                {r.name.charAt(0)}
-              </span>
-              <span>
-                <span className="block text-sm font-semibold text-ink-900">{r.name}</span>
-                <span className="block text-xs text-ink-400">{r.city}</span>
-              </span>
-              <span className="ml-auto text-xs font-medium text-gold-600">
-                {'★'.repeat(r.rating)}
-              </span>
-            </div>
-          </RevealItem>
-        ))}
-      </RevealGroup>
-    </section>
-  )
-}
-
 const FEED = [
   WOMEN.redEmbroidered,
   MEN.whiteArch,
@@ -529,6 +419,9 @@ const FEED = [
 ]
 
 function InstagramStrip() {
+  // Without a real profile to link to, the section has nothing honest to say.
+  if (!SOCIAL.instagram) return null
+
   return (
     <section className="pb-4">
       <div className="container-px">
@@ -543,7 +436,7 @@ function InstagramStrip() {
         {FEED.map((src, i) => (
           <motion.a
             key={src + i}
-            href="https://instagram.com"
+            href={SOCIAL.instagram}
             target="_blank"
             rel="noreferrer noopener"
             initial={{ opacity: 0, scale: 0.94 }}

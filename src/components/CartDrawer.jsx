@@ -35,6 +35,7 @@ export default function CartDrawer() {
 
           <motion.aside
             role="dialog"
+            aria-modal="true"
             aria-label="Shopping bag"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}

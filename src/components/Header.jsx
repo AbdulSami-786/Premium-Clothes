@@ -16,7 +16,8 @@ import {
 import { CATEGORIES, PRODUCTS, getCollectionsByCategory } from '../data/products'
 import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
-import { formatPrice } from '../utils/format'
+import { formatPrice, FREE_SHIPPING_THRESHOLD } from '../utils/format'
+import { STORE, STORE_LINKS } from '../data/config'
 
 /* One tab per category. A category with more than one cloth gets a dropdown of
    those cloths; the rest are plain links. */
@@ -53,12 +54,16 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  /* Any navigation closes every overlay this header owns. */
-  useEffect(() => {
+  /* Any navigation closes every overlay this header owns. Done while rendering
+     (React's pattern for resetting state on a prop change) so the stale overlay
+     never paints on the new page. */
+  const [shownPath, setShownPath] = useState(location.pathname)
+  if (shownPath !== location.pathname) {
+    setShownPath(location.pathname)
     setMobileOpen(false)
     setSearchOpen(false)
     setOpenMenu(null)
-  }, [location.pathname])
+  }
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen || searchOpen ? 'hidden' : ''
@@ -219,8 +224,8 @@ function Dot({ children }) {
 
 function PromoBar() {
   const messages = [
-    'Free delivery on orders over PKR 10,000',
-    'New: The Eid Edit is live',
+    `Free delivery on orders over ${formatPrice(FREE_SHIPPING_THRESHOLD)}`,
+    'New: Embroidered sherwani in five shades',
     'Stitched & unstitched — shipped nationwide',
     'Easy 7-day exchange on stitched pieces',
   ]
@@ -462,8 +467,8 @@ function MobileMenu({ onClose }) {
 
         <div className="border-t border-ink-100 px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <p className="text-[0.65rem] uppercase tracking-[0.18em] text-ink-400">Need help?</p>
-          <a href="tel:+92211234567" className="mt-1 block font-display text-lg text-ink-900">
-            +92 21 1234 567
+          <a href={STORE_LINKS.tel} className="mt-1 block font-display text-lg text-ink-900">
+            {STORE.phone}
           </a>
         </div>
       </motion.aside>

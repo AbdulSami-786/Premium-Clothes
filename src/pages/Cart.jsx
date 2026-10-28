@@ -4,8 +4,10 @@ import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, Truck } from 'lucide-reac
 import Breadcrumbs from '../components/Breadcrumbs'
 import { useShop } from '../context/ShopContext'
 import { formatPrice, FREE_SHIPPING_THRESHOLD } from '../utils/format'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function Cart() {
+  usePageTitle('Shopping bag')
   const { items, totals, updateQuantity, removeLine, clearCart, count } = useShop()
   const remaining = Math.max(FREE_SHIPPING_THRESHOLD - totals.subtotal, 0)
 

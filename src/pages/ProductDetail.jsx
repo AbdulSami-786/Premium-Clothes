@@ -29,11 +29,14 @@ import {
   getSizesFor,
   priceFor,
 } from '../data/products'
-import { formatPrice, discountPercent } from '../utils/format'
+import { formatPrice, discountPercent, FREE_SHIPPING_THRESHOLD } from '../utils/format'
+import { usePageTitle } from '../hooks/usePageTitle'
+import { ONLINE_PAYMENTS } from '../data/config'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const product = getProduct(id)
+  usePageTitle(product?.name ?? 'Page not found')
 
   if (!product) return <NotFound />
 
@@ -319,7 +322,7 @@ function ProductView({ product }) {
               {[
                 { icon: Truck, text: 'Delivered in 3–5 days' },
                 { icon: RefreshCw, text: '7-day easy exchange' },
-                { icon: ShieldCheck, text: 'Secure payment' },
+                { icon: ShieldCheck, text: ONLINE_PAYMENTS ? 'Secure payment' : 'Cash on delivery' },
               ].map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-center gap-2.5">
                   <Icon size={16} className="shrink-0 text-gold-600" />
@@ -349,7 +352,8 @@ function ProductView({ product }) {
                 <div className="space-y-2.5 text-sm leading-relaxed text-ink-600">
                   <p>
                     Orders are dispatched within 24 hours and arrive in 3–5 working days
-                    across Pakistan. Free delivery applies over PKR 10,000.
+                    across Pakistan. Free delivery applies over{' '}
+                    {formatPrice(FREE_SHIPPING_THRESHOLD)}.
                   </p>
                   <p>
                     Stitched pieces can be exchanged within 7 days if unworn with tags

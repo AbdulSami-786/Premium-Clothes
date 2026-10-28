@@ -4,6 +4,7 @@ import { Leaf, Scissors, Sparkles, Users } from 'lucide-react'
 import Reveal, { RevealGroup, RevealItem } from '../components/Reveal'
 import SectionHeading from '../components/SectionHeading'
 import { FABRIC, WIDE, WOMEN } from '../data/images'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const VALUES = [
   {
@@ -52,6 +53,7 @@ const TIMELINE = [
 ]
 
 export default function About() {
+  usePageTitle('Our story')
   return (
     <>
       <section className="relative h-[60vh] min-h-[420px] overflow-hidden bg-ink-900">
@@ -97,8 +99,8 @@ export default function About() {
               </p>
               <p>
                 The difference between the two is convenience, not quality. A stitched
-                Aurina and an unstitched Gulnar come off the same roll, pass the same
-                inspection and are packed by the same hands.
+                suit and an unstitched length of the same cloth come off the same roll,
+                pass the same inspection and are packed by the same hands.
               </p>
               <p>
                 We keep production deliberately small. It means we sell out, and it means

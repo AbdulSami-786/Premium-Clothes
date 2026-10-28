@@ -5,30 +5,32 @@ import Breadcrumbs from '../components/Breadcrumbs'
 import Reveal from '../components/Reveal'
 import Alert from '../components/Alert'
 import { api, apiConfigured } from '../utils/api'
+import { STORE, STORE_LINKS } from '../data/config'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const CHANNELS = [
   {
     icon: Phone,
     title: 'Call us',
-    lines: ['+92 21 1234 567', 'Mon–Sat, 10am–8pm'],
-    href: 'tel:+92211234567',
+    lines: [STORE.phone, 'Mon–Sat, 10am–8pm'],
+    href: STORE_LINKS.tel,
   },
   {
     icon: MessageCircle,
     title: 'WhatsApp',
-    lines: ['+92 300 1234567', 'Fastest for order updates'],
-    href: 'https://wa.me/923001234567',
+    lines: [STORE.whatsapp, 'Fastest for order updates'],
+    href: STORE_LINKS.whatsapp,
   },
   {
     icon: Mail,
     title: 'Email',
-    lines: ['hello@premiumclothes.pk', 'We reply within one working day'],
-    href: 'mailto:hello@premiumclothes.pk',
+    lines: [STORE.email, 'We reply within one working day'],
+    href: STORE_LINKS.mailto,
   },
   {
     icon: MapPin,
     title: 'Visit',
-    lines: ['Shop 14, Tariq Road', 'Karachi, Pakistan'],
+    lines: STORE.address.split(/,\s*(.+)/).filter(Boolean),
   },
 ]
 
@@ -41,6 +43,7 @@ const SUBJECTS = [
 ]
 
 export default function Contact() {
+  usePageTitle('Contact')
   const [form, setForm] = useState({
     name: '',
     email: '',

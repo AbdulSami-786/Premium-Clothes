@@ -10,6 +10,7 @@ import {
 } from './SocialIcons'
 import { CATEGORIES } from '../data/products'
 import { api, apiConfigured } from '../utils/api'
+import { ONLINE_PAYMENTS, SOCIAL, STORE, STORE_LINKS } from '../data/config'
 
 const HELP_LINKS = [
   { label: 'Shipping & Delivery', to: '/shipping' },
@@ -27,11 +28,15 @@ const COMPANY_LINKS = [
 ]
 
 const SOCIALS = [
-  { icon: InstagramIcon, label: 'Instagram', href: 'https://instagram.com' },
-  { icon: FacebookIcon, label: 'Facebook', href: 'https://facebook.com' },
-  { icon: TwitterIcon, label: 'Twitter', href: 'https://twitter.com' },
-  { icon: YoutubeIcon, label: 'YouTube', href: 'https://youtube.com' },
-]
+  { icon: InstagramIcon, label: 'Instagram', href: SOCIAL.instagram },
+  { icon: FacebookIcon, label: 'Facebook', href: SOCIAL.facebook },
+  { icon: TwitterIcon, label: 'Twitter', href: SOCIAL.twitter },
+  { icon: YoutubeIcon, label: 'YouTube', href: SOCIAL.youtube },
+].filter((s) => s.href)
+
+const PAYMENT_BADGES = ONLINE_PAYMENTS
+  ? ['Visa', 'Mastercard', 'EasyPaisa', 'JazzCash', 'COD']
+  : ['Cash on delivery']
 
 export default function Footer() {
   return (
@@ -57,24 +62,24 @@ export default function Footer() {
           <ul className="mt-6 space-y-3 text-sm text-ink-400">
             <li className="flex items-start gap-3">
               <MapPin size={16} className="mt-0.5 shrink-0 text-gold-500" />
-              <span>Shop 14, Tariq Road, Karachi, Pakistan</span>
+              <span>{STORE.address}</span>
             </li>
             <li>
               <a
-                href="tel:+92211234567"
+                href={STORE_LINKS.tel}
                 className="flex items-center gap-3 transition-colors hover:text-white"
               >
                 <Phone size={16} className="shrink-0 text-gold-500" />
-                +92 21 1234 567
+                {STORE.phone}
               </a>
             </li>
             <li>
               <a
-                href="mailto:hello@premiumclothes.pk"
+                href={STORE_LINKS.mailto}
                 className="flex items-center gap-3 transition-colors hover:text-white"
               >
                 <Mail size={16} className="shrink-0 text-gold-500" />
-                hello@premiumclothes.pk
+                {STORE.email}
               </a>
             </li>
           </ul>
@@ -124,10 +129,10 @@ export default function Footer() {
       <div className="border-t border-ink-800">
         <div className="container-px flex flex-col items-center justify-between gap-4 py-6 sm:flex-row">
           <p className="text-xs text-ink-500">
-            © {new Date().getFullYear()} Premium Clothes. All rights reserved.
+            © {new Date().getFullYear()} {STORE.name}. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
-            {['Visa', 'Mastercard', 'EasyPaisa', 'JazzCash', 'COD'].map((method) => (
+            {PAYMENT_BADGES.map((method) => (
               <span
                 key={method}
                 className="rounded border border-ink-800 px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-wider text-ink-500"

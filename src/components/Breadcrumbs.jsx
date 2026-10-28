@@ -8,7 +8,8 @@ export default function Breadcrumbs({ trail }) {
         Home
       </Link>
       {trail.map((crumb, i) => (
-        <span key={crumb.label} className="flex items-center gap-1.5">
+        // Labels can repeat (category and collection are both "Sherwani").
+        <span key={`${i}-${crumb.label}`} className="flex items-center gap-1.5">
           <ChevronRight size={12} className="text-ink-300" />
           {crumb.to && i < trail.length - 1 ? (
             <Link to={crumb.to} className="text-ink-400 transition-colors hover:text-ink-900">

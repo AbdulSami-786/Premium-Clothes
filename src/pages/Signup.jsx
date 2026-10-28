@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 import Breadcrumbs from '../components/Breadcrumbs'
@@ -8,6 +8,7 @@ import Alert from '../components/Alert'
 import BackendNotice from '../components/BackendNotice'
 import { useAuth } from '../context/AuthContext'
 import { WOMEN } from '../data/images'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const PERKS = [
   'Track every order from one place',
@@ -17,7 +18,8 @@ const PERKS = [
 ]
 
 export default function Signup() {
-  const { signUp, apiConfigured } = useAuth()
+  usePageTitle('Create account')
+  const { signUp, apiConfigured, isAuthed } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const next = location.state?.from ?? '/account'
@@ -66,6 +68,9 @@ export default function Signup() {
       setBusy(false)
     }
   }
+
+  /* Someone who is already signed in has no use for this page. */
+  if (isAuthed) return <Navigate to={next} replace />
 
   return (
     <div className="container-px py-8 lg:py-12">

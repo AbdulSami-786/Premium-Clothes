@@ -131,6 +131,7 @@ export const FABRIC = {
 
 /** Hero slides and full-bleed banners — darker shades read best under text. */
 export const WIDE = {
+  sherwani: S['Bottle Green'],
   womenLilac: W['Navy Blue'],
   womenRed: W.Maroon,
   menWhite: W['Dark Brown'],

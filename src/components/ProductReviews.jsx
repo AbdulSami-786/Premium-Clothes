@@ -24,7 +24,6 @@ export default function ProductReviews({ product }) {
     if (!apiConfigured) return
 
     let cancelled = false
-    setLoading(true)
     api
       .productReviews(product.id)
       .then((res) => {
@@ -66,17 +65,23 @@ export default function ProductReviews({ product }) {
             Customer reviews
           </h2>
 
-          <div className="mt-4 flex items-baseline gap-3">
-            <span className="font-display text-5xl text-ink-900">{shownAverage}</span>
-            <div>
-              <Stars value={shownAverage} />
-              <span className="mt-1 block text-xs text-ink-400">
-                {shownCount} {shownCount === 1 ? 'review' : 'reviews'}
-              </span>
-            </div>
-          </div>
+          {shownCount > 0 ? (
+            <>
+              <div className="mt-4 flex items-baseline gap-3">
+                <span className="font-display text-5xl text-ink-900">{shownAverage}</span>
+                <div>
+                  <Stars value={shownAverage} />
+                  <span className="mt-1 block text-xs text-ink-400">
+                    {shownCount} {shownCount === 1 ? 'review' : 'reviews'}
+                  </span>
+                </div>
+              </div>
 
-          <Distribution reviews={reviews} fallbackCount={shownCount} />
+              <Distribution reviews={reviews} fallbackCount={shownCount} />
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-ink-400">No ratings yet.</p>
+          )}
 
           {isAuthed ? (
             <button
@@ -135,7 +140,7 @@ export default function ProductReviews({ product }) {
               <p className="mt-2 text-sm text-ink-400">
                 {apiConfigured
                   ? 'Be the first to review this piece.'
-                  : 'Reviews appear here once the backend is connected.'}
+                  : 'Reviews will appear here once customers start leaving them.'}
               </p>
             </div>
           )}

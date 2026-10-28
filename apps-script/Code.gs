@@ -8,7 +8,7 @@
  *   1. Create a Sheet, open Extensions > Apps Script, paste this file in.
  *   2. Run `setup` once from the editor and grant the permissions it asks for.
  *   3. Deploy > New deployment > Web app, execute as Me, access to Anyone.
- *   4. Put the /exec URL in the site's .env as VITE_API_URL.
+ *   4. Paste the /exec URL into API_URL in the site's src/data/config.js.
  */
 
 /* ------------------------------------------------------------------ *
@@ -25,8 +25,38 @@ var CONFIG = {
   SESSION_TTL_DAYS: 30,
   // A browser may attempt this many failed logins per email before a pause.
   MAX_LOGIN_ATTEMPTS: 8,
+  // Wrong reset codes allowed before the code is thrown away.
+  MAX_RESET_ATTEMPTS: 5,
   LOGIN_WINDOW_MIN: 15,
 }
+
+/**
+ * Prices the server charges. The browser also sends a unit price, but it is
+ * ignored: anyone can edit a request, so what a customer pays must come from
+ * here. KEEP IN SYNC with src/data/products.js — when a price or a length
+ * changes there, change it here and redeploy the script.
+ *
+ * Keyed by collection slug (the start of every product id, e.g.
+ * "arch-khaki" belongs to "arch"), then by the size/length label.
+ */
+var CATALOG = {
+  'sherwani': { 'Small': 30000, 'Medium': 30000, 'Large': 30000 },
+  'wonder-weave': { '4.25m': 4250, '4.5m': 4500, '5m': 5000, '5.5m': 5500 },
+  'arch': { '4.25m': 5400, '4.5m': 5700, '5m': 6350, '5.5m': 7000 },
+  'bareeze-suiting': { '4.5m': 5000, '5m': 5000, '5.5m': 5000 },
+  'supreme': { '4.5m': 5000, '5m': 5000, '5.5m': 5000 },
+  'noor-ctn': { '4.5m': 3700 },
+  'lazio': { '4.5m': 14700 },
+}
+
+/** Delivery rules — keep in sync with src/utils/format.js. */
+var FREE_SHIPPING_THRESHOLD = 10000
+var SHIPPING_FLAT_RATE = 350
+
+var PAYMENT_METHODS = ['cod', 'card', 'wallet']
+
+/** Largest bag we will accept in a single order. */
+var MAX_ORDER_LINES = 50
 
 var SHEETS = {
   USERS: 'Users',
@@ -119,10 +149,18 @@ function doPost(e) {
   }
 }
 
+/** The only actions reachable by GET: they change nothing and carry no secrets. */
+var GET_ACTIONS = ['ping', 'productReviews', 'reviewSummary']
+
 function doGet(e) {
   try {
     var params = (e && e.parameter) || {}
     var action = String(params.action || 'ping')
+    // Everything else (login, orders, …) must be a POST, so passwords and
+    // tokens never end up in a URL that browsers and proxies log.
+    if (GET_ACTIONS.indexOf(action) === -1) {
+      return respond({ ok: false, error: 'This action must be sent with POST.' })
+    }
     return respond(route(action, params, e))
   } catch (err) {
     return respond({ ok: false, error: friendlyError(err) })
@@ -315,11 +353,12 @@ function handleRequestReset(p) {
   // Always report success so the endpoint cannot be used to enumerate
   // which email addresses are registered.
   if (user) {
-    var code = String(Math.floor(100000 + Math.random() * 900000))
+    var code = secureDigits(6)
     var expires = new Date(Date.now() + CONFIG.RESET_TTL_MIN * 60 * 1000)
 
-    // Invalidate any earlier codes for this address.
+    // Invalidate any earlier codes for this address, and the attempt count with them.
     deleteRowsWhere(SHEETS.RESETS, 'email', email)
+    CacheService.getScriptCache().remove(resetKey(email))
     appendRow(SHEETS.RESETS, {
       email: email,
       codeHash: sha256(code + '|' + email),
@@ -380,7 +419,18 @@ function checkResetCode(rawEmail, rawCode) {
   if (new Date(rec.expiresAt).getTime() < Date.now()) {
     return fail('That code has expired. Request a new one.')
   }
+
+  // Six digits is only a million guesses, so cap the wrong ones per code.
+  var cache = CacheService.getScriptCache()
+  var key = resetKey(email)
+  var wrong = Number(cache.get(key) || 0)
+  if (wrong >= CONFIG.MAX_RESET_ATTEMPTS) {
+    deleteRowAt(SHEETS.RESETS, found.rowNumber)
+    cache.remove(key)
+    return fail('Too many incorrect attempts. Request a new code.')
+  }
   if (sha256(code + '|' + email) !== rec.codeHash) {
+    cache.put(key, String(wrong + 1), CONFIG.RESET_TTL_MIN * 60)
     return fail('That code is not valid. Check the email and try again.')
   }
 
@@ -430,11 +480,15 @@ function sendResetEmail(user, code) {
 function handleCreateOrder(p) {
   var items = p.items
   if (!items || !items.length) return fail('Your bag is empty.')
+  if (items.length > MAX_ORDER_LINES) return fail('That is too many different items for one order.')
 
   var customer = p.customer || {}
   if (!trim(customer.name)) return fail('Please enter a name for the delivery.')
   if (!isEmail(normalizeEmail(customer.email))) return fail('Please enter a valid email.')
   if (!trim(customer.address)) return fail('Please enter a delivery address.')
+
+  var payment = trim(p.payment) || 'cod'
+  if (PAYMENT_METHODS.indexOf(payment) === -1) return fail('Please choose a payment method.')
 
   // An order may be placed signed in or as a guest.
   var userId = ''
@@ -443,60 +497,101 @@ function handleCreateOrder(p) {
     if (session) userId = session.user.id
   }
 
-  // Totals are recomputed here rather than trusted from the browser.
+  // Price every line from the server's own catalogue, never from the request.
   var subtotal = 0
-  items.forEach(function (it) {
-    var qty = Math.max(1, Math.min(99, Number(it.quantity) || 1))
-    subtotal += (Number(it.unitPrice) || 0) * qty
-  })
-  var shipping = subtotal === 0 || subtotal >= 10000 ? 0 : 350
-  var total = subtotal + shipping
-
-  var order = {
-    id: 'PC' + String(Date.now()).slice(-8),
-    userId: userId,
-    email: normalizeEmail(customer.email),
-    name: trim(customer.name),
-    phone: trim(customer.phone),
-    address: trim(customer.address),
-    city: trim(customer.city),
-    postal: trim(customer.postal),
-    notes: trim(customer.notes),
-    payment: trim(p.payment) || 'cod',
-    subtotal: subtotal,
-    shipping: shipping,
-    total: total,
-    status: 'Confirmed',
-    placedAt: nowIso(),
+  var priced = []
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i] || {}
+    var qty = Math.max(1, Math.min(99, Math.floor(Number(it.quantity)) || 1))
+    var unit = priceFor(it.productId, it.size)
+    if (unit === null) {
+      return fail('One of the items in your bag is no longer available. Please refresh the page and try again.')
+    }
+    subtotal += unit * qty
+    priced.push({
+      productId: clip(it.productId, 80),
+      name: clip(it.name, 120),
+      image: clip(it.image, 200),
+      size: clip(it.size, 40),
+      color: clip(it.color, 40),
+      quantity: qty,
+      unitPrice: unit,
+      lineTotal: unit * qty,
+    })
   }
+  var shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE
+  var total = subtotal + shipping
 
   var lock = LockService.getScriptLock()
   lock.waitLock(20000)
+  var order
   try {
+    order = {
+      id: newOrderId(),
+      userId: userId,
+      email: normalizeEmail(customer.email),
+      name: clip(customer.name, 100),
+      phone: clip(customer.phone, 30),
+      address: clip(customer.address, 300),
+      city: clip(customer.city, 60),
+      postal: clip(customer.postal, 20),
+      notes: clip(customer.notes, 500),
+      payment: payment,
+      subtotal: subtotal,
+      shipping: shipping,
+      total: total,
+      status: 'Confirmed',
+      placedAt: nowIso(),
+    }
     appendRow(SHEETS.ORDERS, order)
 
-    var rows = items.map(function (it) {
-      var qty = Math.max(1, Math.min(99, Number(it.quantity) || 1))
-      var unit = Number(it.unitPrice) || 0
+    appendRows(SHEETS.ORDER_ITEMS, priced.map(function (row) {
       return {
         orderId: order.id,
-        productId: trim(it.productId),
-        name: trim(it.name),
-        image: trim(it.image),
-        size: trim(it.size),
-        color: trim(it.color),
-        quantity: qty,
-        unitPrice: unit,
-        lineTotal: unit * qty,
+        productId: row.productId,
+        name: row.name,
+        image: row.image,
+        size: row.size,
+        color: row.color,
+        quantity: row.quantity,
+        unitPrice: row.unitPrice,
+        lineTotal: row.lineTotal,
       }
-    })
-    appendRows(SHEETS.ORDER_ITEMS, rows)
+    }))
   } finally {
     lock.releaseLock()
   }
 
-  sendOrderEmail(order, items)
-  return { ok: true, order: withItems(order, items) }
+  sendOrderEmail(order, priced)
+  // Echo the priced lines, so the confirmation shows what was actually charged.
+  return { ok: true, order: withItems(order, priced) }
+}
+
+/** The collection a product id belongs to ("arch-khaki" -> "arch"), or null. */
+function collectionOf(productId) {
+  var id = trim(productId)
+  var slugs = Object.keys(CATALOG)
+  for (var i = 0; i < slugs.length; i++) {
+    if (id.indexOf(slugs[i] + '-') === 0) return slugs[i]
+  }
+  return null
+}
+
+/** Server-side unit price for a product + size/length, or null if either is unknown. */
+function priceFor(productId, size) {
+  var slug = collectionOf(productId)
+  if (!slug) return null
+  var price = CATALOG[slug][trim(size)]
+  return typeof price === 'number' ? price : null
+}
+
+/** An id nobody can guess or collide with; call inside the script lock. */
+function newOrderId() {
+  for (var attempt = 0; attempt < 10; attempt++) {
+    var id = 'PC' + secureDigits(8)
+    if (!findRow(SHEETS.ORDERS, 'id', id)) return id
+  }
+  throw new Error('Could not allocate an order number')
 }
 
 function handleMyOrders(p) {
@@ -620,7 +715,7 @@ function handleAddReview(p) {
   var rating = Math.round(Number(p.rating) || 0)
   var body = trim(p.body)
 
-  if (!productId) return fail('Missing product.')
+  if (!collectionOf(productId)) return fail('Unknown product.')
   if (rating < 1 || rating > 5) return fail('Please choose a rating from 1 to 5.')
   if (body.length < 10) return fail('Please write a little more in your review.')
 
@@ -635,8 +730,8 @@ function handleAddReview(p) {
     userId: session.user.id,
     name: session.user.name,
     rating: rating,
-    title: trim(p.title),
-    body: body,
+    title: clip(p.title, 100),
+    body: clip(body, 2000),
     status: 'Published',
     createdAt: nowIso(),
   }
@@ -719,7 +814,7 @@ function handleToggleWishlist(p) {
   if (session.error) return session
 
   var productId = trim(p.productId)
-  if (!productId) return fail('Missing product.')
+  if (!collectionOf(productId)) return fail('Unknown product.')
 
   var rows = readAllWithRows(SHEETS.WISHLIST)
   var existing = null
@@ -766,7 +861,7 @@ function handleSyncWishlist(p) {
   var toAdd = []
   incoming.forEach(function (raw) {
     var pid = trim(raw)
-    if (pid && !have[pid]) {
+    if (collectionOf(pid) && !have[pid]) {
       have[pid] = true
       toAdd.push({ userId: session.user.id, productId: pid, addedAt: nowIso() })
     }
@@ -781,9 +876,9 @@ function handleSyncWishlist(p) {
  * ------------------------------------------------------------------ */
 
 function handleContact(p) {
-  var name = trim(p.name)
+  var name = clip(p.name, 100)
   var email = normalizeEmail(p.email)
-  var message = trim(p.message)
+  var message = clip(p.message, 3000)
 
   if (!name) return fail('Please tell us your name.')
   if (!isEmail(email)) return fail('Please enter a valid email address.')
@@ -793,7 +888,7 @@ function handleContact(p) {
     id: 'M' + randomToken(8).toUpperCase(),
     name: name,
     email: email,
-    subject: trim(p.subject) || 'General enquiry',
+    subject: clip(p.subject, 100) || 'General enquiry',
     message: message,
     createdAt: nowIso(),
   })
@@ -801,7 +896,7 @@ function handleContact(p) {
   try {
     MailApp.sendEmail({
       to: CONFIG.REPLY_TO,
-      subject: '[' + CONFIG.STORE_NAME + '] ' + (trim(p.subject) || 'New message'),
+      subject: '[' + CONFIG.STORE_NAME + '] ' + (clip(p.subject, 100) || 'New message'),
       body: 'From: ' + name + ' <' + email + '>\n\n' + message,
       replyTo: email,
     })
@@ -912,6 +1007,8 @@ function cleanupExpired() {
 
 function loginKey(email) { return 'login:' + sha256(email).slice(0, 24) }
 
+function resetKey(email) { return 'reset:' + sha256(email).slice(0, 24) }
+
 function isRateLimited(email) {
   var raw = CacheService.getScriptCache().get(loginKey(email))
   return raw ? Number(raw) >= CONFIG.MAX_LOGIN_ATTEMPTS : false
@@ -1005,14 +1102,30 @@ function findRow(name, column, value) {
   return null
 }
 
-function appendRow(name, obj) {
-  var headers = headersOf(name)
-  sheet(name).appendRow(headers.map(function (h) {
-    return obj[h] === undefined ? '' : obj[h]
-  }))
+/**
+ * Writes values with every text cell forced to plain text first. Left alone,
+ * Sheets "helpfully" parses what it is given: 03001234567 loses its leading
+ * zero, "+92 300 1234567" becomes a formula error, and a customer who types
+ * =IMPORTXML(...) into a name field would plant a live formula in the sheet.
+ * Numbers keep whatever format the cell already had.
+ */
+function writeValues(range, values) {
+  var formats = range.getNumberFormats()
+  values.forEach(function (row, r) {
+    row.forEach(function (v, c) {
+      if (typeof v === 'string') formats[r][c] = '@'
+    })
+  })
+  range.setNumberFormats(formats)
+  range.setValues(values)
 }
 
-/** One setValues call for many rows — much faster than appendRow in a loop. */
+/** One row at the bottom of the sheet. */
+function appendRow(name, obj) {
+  appendRows(name, [obj])
+}
+
+/** Many rows in one write — much faster than appending one at a time. */
 function appendRows(name, objects) {
   if (!objects || !objects.length) return
   var s = sheet(name)
@@ -1020,7 +1133,13 @@ function appendRows(name, objects) {
   var values = objects.map(function (obj) {
     return headers.map(function (h) { return obj[h] === undefined ? '' : obj[h] })
   })
-  s.getRange(s.getLastRow() + 1, 1, values.length, headers.length).setValues(values)
+
+  var first = s.getLastRow() + 1
+  var missing = first + values.length - 1 - s.getMaxRows()
+  // A full sheet does not grow by itself when written with setValues.
+  if (missing > 0) s.insertRowsAfter(s.getMaxRows(), missing)
+
+  writeValues(s.getRange(first, 1, values.length, headers.length), values)
 }
 
 function updateRow(name, column, value, patch) {
@@ -1031,11 +1150,12 @@ function updateRow(name, column, value, patch) {
   var merged = found.record
   Object.keys(patch).forEach(function (k) { merged[k] = patch[k] })
 
-  sheet(name)
-    .getRange(found.rowNumber, 1, 1, headers.length)
-    .setValues([headers.map(function (h) {
+  writeValues(
+    sheet(name).getRange(found.rowNumber, 1, 1, headers.length),
+    [headers.map(function (h) {
       return merged[h] === undefined ? '' : merged[h]
-    })])
+    })],
+  )
   return true
 }
 
@@ -1116,14 +1236,33 @@ function hashPassword(password, salt) {
   return digest
 }
 
+/**
+ * Unguessable hex string. Utilities.getUuid() is backed by a cryptographically
+ * secure generator; Math.random() is not, and these values are bearer secrets
+ * (session tokens, ids).
+ */
 function randomToken(length) {
-  var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
   var out = ''
-  for (var i = 0; i < length; i++) {
-    out += chars.charAt(Math.floor(Math.random() * chars.length))
+  while (out.length < length) out += Utilities.getUuid().replace(/-/g, '')
+  return out.slice(0, length)
+}
+
+/** A string of `length` random decimal digits (reset codes, order numbers). */
+function secureDigits(length) {
+  var out = ''
+  while (out.length < length) {
+    var hex = Utilities.getUuid().replace(/-/g, '')
+    // Two hex characters give 0-255; discard 250-255 so every digit is equally likely.
+    for (var i = 0; i + 1 < hex.length && out.length < length; i += 2) {
+      var n = parseInt(hex.substr(i, 2), 16)
+      if (n < 250) out += String(n % 10)
+    }
   }
   return out
 }
+
+/** trim() plus a length cap, for anything a visitor can type. */
+function clip(v, max) { return trim(v).slice(0, max) }
 
 function escapeHtml(s) {
   return String(s)

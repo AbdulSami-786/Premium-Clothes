@@ -4,8 +4,10 @@ import Breadcrumbs from '../components/Breadcrumbs'
 import Reveal from '../components/Reveal'
 import { POLICIES } from '../data/policies'
 import NotFound from './NotFound'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function InfoPage({ slug }) {
+  usePageTitle(POLICIES[slug]?.title ?? 'Page not found')
   const page = POLICIES[slug]
   if (!page) return <NotFound />
 

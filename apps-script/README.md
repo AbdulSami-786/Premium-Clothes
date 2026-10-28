@@ -88,6 +88,17 @@ Editing the script is not enough; you must redeploy:
 The URL stays the same, so `src/data/config.js` does not change. If you create
 a *new* deployment instead, you get a new URL and must update that file.
 
+## When you change a price or a length
+
+The server charges from its own price list, not from what the browser sends.
+That list is `CATALOG` near the top of `Code.gs`, and it mirrors
+`src/data/products.js`. **Whenever you change a price, add a length, or add a
+cloth in `products.js`, make the same change in `CATALOG` and redeploy** (see
+above). Until you do, an order for the changed item is either charged the old
+price or refused with "no longer available". The delivery rules
+(`FREE_SHIPPING_THRESHOLD`, `SHIPPING_FLAT_RATE`) live next to it and mirror
+`src/utils/format.js`.
+
 ## What each sheet holds
 
 | Sheet | Contents |
@@ -121,13 +132,23 @@ What this does:
 
 - Passwords are salted and hashed 600 times with SHA-256. The plain password is
   never stored or emailed.
-- Reset codes are stored hashed, expire after 30 minutes, and work once.
+- Reset codes are stored hashed, expire after 30 minutes, and work once. After
+  five wrong guesses a code is thrown away and a new one must be requested.
+- Session tokens, reset codes and order numbers come from Google's secure
+  random generator, so they cannot be predicted.
 - Resetting a password signs out every existing session for that account.
 - Failed logins are rate-limited per email address.
 - Sign-in and password-reset responses are deliberately vague about whether an
   account exists, so the endpoints cannot be used to harvest customer emails.
-- Order totals are recalculated on the server from unit prices, so a modified
-  browser cannot change what an order costs.
+- Order totals are recalculated on the server from its own price list
+  (`CATALOG`), so a modified browser cannot change what an order costs. An
+  unknown product, an unknown length or an unknown payment method is refused.
+- Only `ping`, `productReviews` and `reviewSummary` answer GET requests.
+  Everything else — sign-in, orders, account changes — is POST only, so
+  passwords and tokens never appear in a URL.
+- Text is written to the sheet as plain text. Without that, Sheets would drop
+  the leading zero of `03001234567`, turn `+92 300 1234567` into an error, and
+  run a customer-typed `=FORMULA(...)` as a real formula.
 
 What you should know:
 
@@ -169,7 +190,8 @@ thousands of rows. Well beyond that, move to a real database.
 ## API reference
 
 All calls are `POST` to the Web App URL with a JSON body containing an
-`action`. Responses are `{ ok: true, ... }` or `{ ok: false, error: "..." }`.
+`action` (`ping`, `productReviews` and `reviewSummary` also accept GET).
+Responses are `{ ok: true, ... }` or `{ ok: false, error: "..." }`.
 
 | Action | Needs token | Purpose |
 | --- | --- | --- |

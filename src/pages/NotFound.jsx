@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CATEGORIES } from '../data/products'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function NotFound() {
+  usePageTitle('Page not found')
   return (
     <div className="container-px flex flex-col items-center py-24 text-center lg:py-32">
       <motion.p

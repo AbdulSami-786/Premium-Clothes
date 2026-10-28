@@ -15,14 +15,18 @@ import {
   getCollectionsByCategory,
 } from '../data/products'
 import { formatPrice } from '../utils/format'
-import { STORE } from '../data/config'
+import { STORE_LINKS } from '../data/config'
 import NotFound from './NotFound'
+import { usePageTitle } from '../hooks/usePageTitle'
 
+const HAS_RATINGS = PRODUCTS.some((p) => p.rating > 0)
+
+/* "Top rated" only means something once products carry ratings. */
 const SORTS = [
   { value: 'featured', label: 'Featured' },
   { value: 'price-asc', label: 'Price: low to high' },
   { value: 'price-desc', label: 'Price: high to low' },
-  { value: 'rating', label: 'Top rated' },
+  ...(HAS_RATINGS ? [{ value: 'rating', label: 'Top rated' }] : []),
   { value: 'name', label: 'Alphabetical' },
 ]
 
@@ -85,12 +89,13 @@ export default function Shop({ mode = 'all' }) {
   const toggle = (setter) => (value) =>
     setter((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]))
 
-  // A category or collection with no products is hidden, so its old link 404s.
-  if ((mode === 'category' && !category) || (mode === 'collection' && !collection)) {
-    return <NotFound />
-  }
-
+  const missing = (mode === 'category' && !category) || (mode === 'collection' && !collection)
   const heading = category?.name ?? collection?.name ?? (query ? `“${query}”` : 'All Products')
+  usePageTitle(missing ? 'Page not found' : heading)
+
+  // An unknown category or collection has nothing to show, so its link 404s.
+  if (missing) return <NotFound />
+
   const intro =
     category?.description ??
     collection?.blurb ??
@@ -319,7 +324,7 @@ function Chip({ to, current, image, children }) {
 
 /** Shown for a category that has no products yet. */
 function ComingSoon({ category }) {
-  const whatsapp = `https://wa.me/${STORE.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
+  const whatsapp = `${STORE_LINKS.whatsapp}?text=${encodeURIComponent(
     `Hi, I'm interested in ${category.name}.`,
   )}`
   const cloths = getCollectionsByCategory('unstitched')

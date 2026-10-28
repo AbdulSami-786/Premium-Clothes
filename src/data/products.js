@@ -5,6 +5,10 @@
  * separate product. To add a cloth, add one entry to `LINES` below — its
  * colours become products automatically.
  *
+ * Prices are also held by the order backend (`CATALOG` in
+ * apps-script/Code.gs), which charges from its own copy. If you use the
+ * backend, change a price in both places.
+ *
  * Photography lives in `./images.js` — swap the URLs there to use your own
  * pictures. Everything else on the site derives from this file.
  */

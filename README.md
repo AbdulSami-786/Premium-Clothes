@@ -47,14 +47,21 @@ Almost everything you will want to edit lives in three files:
 - **`src/data/products.js`** — categories, collections and every product
   (name, price, fabric, colours, sizes, description, details).
 - **`src/data/images.js`** — all photography, grouped by what it shows. To use
-  your own pictures, drop them in `public/products/` and replace the values
-  here with paths like `/products/aurina-1.jpg`. Nothing else needs to change.
+  your own pictures, drop them in `public/product/` and replace the values
+  here with paths like `/product/pro-1.jpeg`. Nothing else needs to change.
 - **`src/data/policies.js`** — the copy for the shipping, returns, FAQ,
   privacy and terms pages.
-- **`src/data/config.js`** — the backend URL and your shop's contact details.
+- **`src/data/config.js`** — the backend URL, your shop's contact details and
+  social links. The phone, email and address you set here are used on every
+  page, including the policy pages.
 
 Prices are plain numbers in rupees; `src/utils/format.js` handles the
 formatting, along with the free-delivery threshold and flat shipping rate.
+
+> **If you connect the backend, prices live in two places.** The server charges
+> from the `CATALOG` list in `apps-script/Code.gs`, which must match
+> `products.js`. See *When you change a price or a length* in
+> [apps-script/README.md](apps-script/README.md).
 
 ## Cart, wishlist and orders
 
@@ -101,6 +108,29 @@ develop the storefront before setting any of this up.
 Change an order's `status` cell to `Packed`, `Shipped` or `Delivered` and the
 customer sees it on their account page. Set a review's `status` to `Hidden` to
 unpublish it. Download the Newsletter tab to export your mailing list.
+
+## Going live checklist
+
+1. **Your real details** in `src/data/config.js`: `STORE` (phone, WhatsApp,
+   email, address) is still placeholder text, and so is `REPLY_TO` in
+   `apps-script/Code.gs` — set it to an inbox you read.
+2. **Social links**: paste your profile URLs into `SOCIAL` in the same file.
+   Empty ones are hidden, and the home-page Instagram strip appears once
+   `instagram` is set.
+3. **Payments**: the site offers cash on delivery only. When a gateway is
+   connected, set `ONLINE_PAYMENTS = true` in `config.js` to show card and
+   wallet options (the payment itself still has to be built).
+4. **Hosting**: `npm run build`, then upload `dist/`. The site uses clean URLs,
+   so the host must serve `index.html` for every path. `public/_redirects`
+   (Netlify, Cloudflare Pages) and `vercel.json` (Vercel) already do this; on
+   other hosts add the equivalent rewrite.
+5. **Backend**: after any change to `apps-script/Code.gs`, redeploy it as a new
+   version. If you change a price in `products.js`, change `CATALOG` in
+   `Code.gs` too.
+6. **Test once for real**: place a cash-on-delivery order, check the Orders
+   sheet and the confirmation email, then delete the test rows.
+7. Home-page claims you have not confirmed (the "24 years" and timeline on the
+   About page, the "eleven pairs of hands" banner) are yours to verify.
 
 ## What is not wired up
 

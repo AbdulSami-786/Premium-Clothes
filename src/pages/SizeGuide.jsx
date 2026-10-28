@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Ruler } from 'lucide-react'
 import Breadcrumbs from '../components/Breadcrumbs'
 import Reveal from '../components/Reveal'
+import { STORE } from '../data/config'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const SHALWAR_KAMEEZ = {
   headers: ['Size', 'Chest (in)', 'Collar (in)', 'Kameez length (in)', 'Shalwar length (in)'],
@@ -46,6 +48,7 @@ const TIPS = [
 ]
 
 export default function SizeGuide() {
+  usePageTitle('Size guide')
   const [tab, setTab] = useState('shalwar-kameez')
   const active = TABS.find((t) => t.id === tab)
 
@@ -125,7 +128,7 @@ export default function SizeGuide() {
       <div className="mt-10 rounded-2xl bg-ink-50/70 p-6 text-sm leading-relaxed text-ink-600">
         <p className="font-semibold text-ink-900">Still unsure?</p>
         <p className="mt-2">
-          Send us your measurements on WhatsApp at +92 300 1234567 and we will tell you
+          Send us your measurements on WhatsApp at {STORE.whatsapp} and we will tell you
           which size to order. For unstitched fabric, we can also arrange stitching to
           your measurements for an additional charge.
         </p>

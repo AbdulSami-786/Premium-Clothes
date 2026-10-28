@@ -7,11 +7,17 @@ import { api, apiConfigured } from '../utils/api'
 
 const ShopContext = createContext(null)
 
+/* Shape checks for what comes back from storage — see useLocalStorage. */
+const isCartLines = (v) =>
+  Array.isArray(v) &&
+  v.every((l) => l && typeof l.key === 'string' && typeof l.productId === 'string' && l.quantity > 0)
+const isIdList = (v) => Array.isArray(v) && v.every((id) => typeof id === 'string')
+
 export function ShopProvider({ children }) {
   /* Cart lines store only ids and variant choices; product detail is looked up
      at render time so a price change in the data file is picked up everywhere. */
-  const [lines, setLines] = useLocalStorage('pc.cart', [])
-  const [wishlist, setWishlist] = useLocalStorage('pc.wishlist', [])
+  const [lines, setLines] = useLocalStorage('pc.cart', [], isCartLines)
+  const [wishlist, setWishlist] = useLocalStorage('pc.wishlist', [], isIdList)
   const [cartOpen, setCartOpen] = useState(false)
   const [lastAdded, setLastAdded] = useState(null)
 

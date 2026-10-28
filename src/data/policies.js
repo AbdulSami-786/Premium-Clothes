@@ -3,6 +3,9 @@
  * so adding a policy page means adding a key here plus a route.
  */
 
+import { ONLINE_PAYMENTS, STORE } from './config'
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT_RATE, formatPrice } from '../utils/format'
+
 export const POLICIES = {
   shipping: {
     eyebrow: 'Delivery',
@@ -21,8 +24,8 @@ export const POLICIES = {
       {
         heading: 'Charges',
         body: [
-          'Flat PKR 350 on orders under PKR 10,000.',
-          'Free delivery on every order of PKR 10,000 and above.',
+          `Flat ${formatPrice(SHIPPING_FLAT_RATE)} on orders under ${formatPrice(FREE_SHIPPING_THRESHOLD)}.`,
+          `Free delivery on every order of ${formatPrice(FREE_SHIPPING_THRESHOLD)} and above.`,
           'Cash on delivery is available nationwide at no extra charge.',
         ],
       },
@@ -68,13 +71,13 @@ export const POLICIES = {
         heading: 'Faulty or incorrect items',
         body: [
           'If we send the wrong item or a piece arrives with a manufacturing fault, we cover return shipping and replace it at no cost.',
-          'Photograph the issue and send it to hello@premiumclothes.pk within 48 hours of delivery.',
+          `Photograph the issue and send it to ${STORE.email} within 48 hours of delivery.`,
         ],
       },
       {
         heading: 'How to start a return',
         body: [
-          'Email hello@premiumclothes.pk or message +92 300 1234567 with your order number.',
+          `Email ${STORE.email} or message ${STORE.whatsapp} with your order number.`,
           'We arrange a courier pickup where available, or share a return address.',
           'Refunds are processed within 7 working days of the item reaching us.',
         ],
@@ -114,13 +117,15 @@ export const POLICIES = {
       {
         heading: 'Do you ship outside Pakistan?',
         body: [
-          'Not through the website yet. For international orders, email hello@premiumclothes.pk and we will quote shipping directly.',
+          `Not through the website yet. For international orders, email ${STORE.email} and we will quote shipping directly.`,
         ],
       },
       {
         heading: 'Which payment methods do you accept?',
         body: [
-          'Cash on delivery, Visa and Mastercard, and mobile wallets including EasyPaisa and JazzCash.',
+          ONLINE_PAYMENTS
+            ? 'Cash on delivery, Visa and Mastercard, and mobile wallets including EasyPaisa and JazzCash.'
+            : 'Cash on delivery, available nationwide. Online payment is coming soon.',
         ],
       },
     ],
@@ -150,14 +155,16 @@ export const POLICIES = {
         heading: 'What we do not do',
         body: [
           'We do not sell or rent your details to anyone.',
-          'We do not store card numbers. Card payments are handled by our payment processor.',
+          ONLINE_PAYMENTS
+            ? 'We do not store card numbers. Card payments are handled by our payment processor.'
+            : 'We do not ask for or store card details; payment is made in cash on delivery.',
         ],
       },
       {
         heading: 'Your choices',
         body: [
-          'Ask us for a copy of what we hold about you, or ask us to delete it, by emailing hello@premiumclothes.pk.',
-          'Cart and wishlist data is stored in your own browser and never leaves your device.',
+          `Ask us for a copy of what we hold about you, or ask us to delete it, by emailing ${STORE.email}.`,
+          'Your cart is stored in your own browser and never leaves your device. If you sign in, your wishlist is saved to your account so it follows you across devices.',
         ],
       },
     ],
