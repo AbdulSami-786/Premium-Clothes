@@ -242,8 +242,11 @@ const LINES = [
 
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
+/* A shade maps to one photo, or to a list of photos (first = cover). */
+const photosOf = (value) => (Array.isArray(value) ? value : [value])
+
 export const PRODUCTS = LINES.flatMap((line) =>
-  Object.entries(line.shades).map(([shade, image]) => ({
+  Object.entries(line.shades).map(([shade, photos]) => ({
     id: `${line.slug}-${slugify(shade)}`,
     name: `${line.name} — ${shade}`,
     shade,
@@ -254,8 +257,8 @@ export const PRODUCTS = LINES.flatMap((line) =>
     sizes: line.sizes,
     fabric: line.name,
     colors: [shade],
-    colorImages: { [shade]: image },
-    images: [image, ...(line.extraImages ?? [])],
+    colorImages: { [shade]: photosOf(photos)[0] },
+    images: [...photosOf(photos), ...(line.extraImages ?? [])],
     pieces: line.pieces,
     rating: 0,
     reviews: 0,

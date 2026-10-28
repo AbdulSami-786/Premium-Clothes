@@ -95,6 +95,23 @@ export const SHERWANI = {
   'Black Brown': '/product/sher-5.jpeg',
 }
 
+/* Ready-made shalwar kameez. Each design lists its photos in gallery order: the
+   first is the cover (full body or torso), the rest are collar, placket and
+   cuff close-ups. The originals are kept in source-images/shalwar-kameez/. */
+const sk = (design, count) =>
+  Array.from({ length: count }, (_, i) => `/product/sk-${design}-${i + 1}.jpeg`)
+
+export const SHALWAR_KAMEEZ = {
+  Ivory: sk('ivory', 4),
+  Teal: sk('teal', 4),
+  Charcoal: sk('charcoal', 6),
+  'Slate Grey': sk('slate', 4),
+  Lilac: sk('lilac', 4),
+  Sage: sk('sage', 6),
+  'Steel Grey': sk('steel', 4),
+  Midnight: sk('midnight', 5),
+}
+
 const W = WONDER_WEAVE
 const S = SHERWANI
 
