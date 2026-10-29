@@ -40,6 +40,7 @@ var CONFIG = {
  * "arch-khaki" belongs to "arch"), then by the size/length label.
  */
 var CATALOG = {
+  'shalwar-kameez': { 'XS': 8000, 'S': 8000, 'M': 8000, 'L': 8000, 'XL': 8000, 'XXL': 8000 },
   'sherwani': { 'Small': 30000, 'Medium': 30000, 'Large': 30000 },
   'wonder-weave': { '4.25m': 4250, '4.5m': 4500, '5m': 5000, '5.5m': 5500 },
   'arch': { '4.25m': 5400, '4.5m': 5700, '5m': 6350, '5.5m': 7000 },

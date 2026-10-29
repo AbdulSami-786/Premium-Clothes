@@ -20,6 +20,7 @@ import {
   LAZIO_BOX,
   NOOR_CTN,
   NOOR_CARD,
+  SHALWAR_KAMEEZ,
   SHERWANI,
   SUPREME,
   WIDE,
@@ -75,6 +76,27 @@ export const SIZES_UNSTITCHED = ['Standard (3 pc)', 'Large (3.5 pc)']
    home page and in the menus. `shades` maps each colour to its photo; every
    colour becomes its own product. */
 const LINES = [
+  {
+    slug: 'shalwar-kameez',
+    name: 'Shalwar Kameez',
+    short: 'Shalwar Kameez',
+    category: 'shalwar-kameez',
+    blurb: 'Ready-to-wear shalwar kameez in eight shades, finished with a neat collar, placket and cuffs.',
+    price: 8000,
+    sizes: SIZES_STITCHED,
+    pieces: 2,
+    badge: 'New',
+    shades: SHALWAR_KAMEEZ,
+    cover: SHALWAR_KAMEEZ.Ivory[0],
+    description:
+      'A fully stitched shalwar kameez, hemmed, pressed and ready to wear. Cut for a clean drape with a neat collar, placket and cuffs, in eight shades.',
+    details: [
+      'Kameez with matching shalwar',
+      'Fully stitched and pressed, ready to wear',
+      'Sizes XS to XXL',
+      'Eight shades',
+    ],
+  },
   {
     slug: 'sherwani',
     name: 'Embroidered Sherwani',

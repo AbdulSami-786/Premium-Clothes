@@ -35,9 +35,9 @@ Anything else renders the 404 page.
 ### Categories
 
 Three sections, matching the navbar tabs: **Shalwar Kameez**, **Sherwani** and
-**Unstitched**. Shalwar Kameez has no products yet, so its page shows a
-"coming soon" message; add a line with `category: 'shalwar-kameez'` in
-`src/data/products.js` and it fills in automatically. Old
+**Unstitched**. A category with no products shows a "coming soon" message;
+add a line with that `category` in `src/data/products.js` and it fills in
+automatically. Old
 `/category/stitched-men` and `/category/unstitched-men` links still work.
 
 ## Changing the content
