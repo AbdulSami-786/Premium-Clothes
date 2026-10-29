@@ -13,4 +13,9 @@ export const shippingFor = (subtotal) =>
   subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE
 
 /** A cart line is identified by the product plus its chosen variant. */
-export const lineKey = (productId, size, color) => `${productId}__${size}__${color}`
+export const lineKey = (productId, size, color, stitch) =>
+  `${productId}__${size}__${color}${stitch ? `__stitch-${stitch}` : ''}`
+
+/** "4.5m", or "4.5m · Stitched (M)" when the customer added stitching. */
+export const variantLabel = ({ size, stitch }) =>
+  stitch ? `${size} · Stitched (${stitch})` : size

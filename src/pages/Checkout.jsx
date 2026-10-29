@@ -7,7 +7,7 @@ import Alert from '../components/Alert'
 import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
 import { api, apiConfigured } from '../utils/api'
-import { formatPrice } from '../utils/format'
+import { formatPrice, variantLabel } from '../utils/format'
 import { ONLINE_PAYMENTS } from '../data/config'
 
 const STEPS = ['Contact', 'Delivery', 'Payment']
@@ -224,6 +224,7 @@ function CheckoutForm() {
             name: i.product.name,
             image: i.image,
             size: i.size,
+            stitch: i.stitch || '',
             color: i.color,
             quantity: i.quantity,
             unitPrice: i.unitPrice,
@@ -244,6 +245,7 @@ function CheckoutForm() {
             name: i.product.name,
             image: i.image,
             size: i.size,
+            stitch: i.stitch || '',
             color: i.color,
             quantity: i.quantity,
             lineTotal: i.lineTotal,
@@ -612,7 +614,7 @@ function CheckoutForm() {
                       {item.product.name}
                     </p>
                     <p className="mt-0.5 text-xs text-ink-400">
-                      {item.size} · {item.color}
+                      {variantLabel(item)} · {item.color}
                     </p>
                   </div>
                   <span className="text-sm font-semibold text-ink-900">

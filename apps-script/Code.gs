@@ -50,6 +50,15 @@ var CATALOG = {
   'lazio': { '4.5m': 14700 },
 }
 
+/**
+ * Optional stitching on unstitched cloth. KEEP IN SYNC with STITCH_PRICE and
+ * STITCH_SIZES in src/data/products.js. Sherwani and shalwar kameez are
+ * already stitched, so only collections listed here accept it.
+ */
+var STITCH_PRICE = 3000
+var STITCH_SIZES = ['S', 'M', 'L', 'XL']
+var STITCHABLE = ['wonder-weave', 'arch', 'bareeze-suiting', 'supreme', 'noor-ctn', 'lazio']
+
 /** Delivery rules — keep in sync with src/utils/format.js. */
 var FREE_SHIPPING_THRESHOLD = 10000
 var SHIPPING_FLAT_RATE = 350
@@ -81,7 +90,7 @@ var COLUMNS = {
   ],
   OrderItems: [
     'orderId', 'productId', 'name', 'image', 'size', 'color', 'quantity',
-    'unitPrice', 'lineTotal',
+    'unitPrice', 'lineTotal', 'stitch',
   ],
   Reviews: ['id', 'productId', 'userId', 'name', 'rating', 'title', 'body', 'status', 'createdAt'],
   Wishlist: ['userId', 'productId', 'addedAt'],
@@ -504,7 +513,8 @@ function handleCreateOrder(p) {
   for (var i = 0; i < items.length; i++) {
     var it = items[i] || {}
     var qty = Math.max(1, Math.min(99, Math.floor(Number(it.quantity)) || 1))
-    var unit = priceFor(it.productId, it.size)
+    var stitch = trim(it.stitch)
+    var unit = priceFor(it.productId, it.size, stitch)
     if (unit === null) {
       return fail('One of the items in your bag is no longer available. Please refresh the page and try again.')
     }
@@ -515,6 +525,7 @@ function handleCreateOrder(p) {
       image: clip(it.image, 200),
       size: clip(it.size, 40),
       color: clip(it.color, 40),
+      stitch: stitch,
       quantity: qty,
       unitPrice: unit,
       lineTotal: unit * qty,
@@ -554,6 +565,7 @@ function handleCreateOrder(p) {
         image: row.image,
         size: row.size,
         color: row.color,
+        stitch: row.stitch,
         quantity: row.quantity,
         unitPrice: row.unitPrice,
         lineTotal: row.lineTotal,
@@ -578,12 +590,23 @@ function collectionOf(productId) {
   return null
 }
 
-/** Server-side unit price for a product + size/length, or null if either is unknown. */
-function priceFor(productId, size) {
+/**
+ * Server-side unit price for a product + size/length, or null if either is
+ * unknown. A non-empty `stitch` adds the stitching charge; it must be a valid
+ * stitch size on a collection that offers stitching, otherwise null.
+ */
+function priceFor(productId, size, stitch) {
   var slug = collectionOf(productId)
   if (!slug) return null
   var price = CATALOG[slug][trim(size)]
-  return typeof price === 'number' ? price : null
+  if (typeof price !== 'number') return null
+
+  stitch = trim(stitch)
+  if (stitch) {
+    if (STITCHABLE.indexOf(slug) === -1 || STITCH_SIZES.indexOf(stitch) === -1) return null
+    price += STITCH_PRICE
+  }
+  return price
 }
 
 /** An id nobody can guess or collide with; call inside the script lock. */
@@ -672,6 +695,7 @@ function withItems(order, items) {
         image: i.image,
         size: i.size,
         color: i.color,
+        stitch: i.stitch || '',
         quantity: Number(i.quantity) || 1,
         lineTotal: Number(i.lineTotal) || 0,
       }
@@ -681,7 +705,8 @@ function withItems(order, items) {
 
 function sendOrderEmail(order, items) {
   var lines = items.map(function (i) {
-    return '· ' + i.name + ' (' + i.size + ', ' + i.color + ') × ' + i.quantity
+    var stitch = i.stitch ? ', stitched ' + i.stitch : ''
+    return '· ' + i.name + ' (' + i.size + stitch + ', ' + i.color + ') × ' + i.quantity
   }).join('\n')
 
   var text =

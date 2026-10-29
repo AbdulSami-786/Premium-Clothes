@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
-import { formatPrice } from '../utils/format'
+import { formatPrice, variantLabel } from '../utils/format'
 
 const STATUS_STYLES = {
   Confirmed: 'bg-ink-100 text-ink-700',
@@ -123,7 +123,7 @@ export default function OrderCard({ order, defaultOpen = false }) {
                         <p className="text-sm font-medium text-ink-900">{item.name}</p>
                       )}
                       <p className="mt-0.5 text-xs text-ink-400">
-                        {item.size} · {item.color} · Qty {item.quantity}
+                        {variantLabel(item)} · {item.color} · Qty {item.quantity}
                       </p>
                     </div>
 

@@ -27,8 +27,8 @@ export function ShopProvider({ children }) {
   const syncedFor = useRef(null)
 
   const addToCart = useCallback(
-    (product, { size, color, quantity = 1 }) => {
-      const key = lineKey(product.id, size, color)
+    (product, { size, color, quantity = 1, stitch = null }) => {
+      const key = lineKey(product.id, size, color, stitch)
       setLines((prev) => {
         const existing = prev.find((l) => l.key === key)
         if (existing) {
@@ -36,7 +36,7 @@ export function ShopProvider({ children }) {
             l.key === key ? { ...l, quantity: Math.min(l.quantity + quantity, 99) } : l,
           )
         }
-        return [...prev, { key, productId: product.id, size, color, quantity }]
+        return [...prev, { key, productId: product.id, size, color, stitch, quantity }]
       })
       setLastAdded({ id: product.id, at: Date.now() })
       setCartOpen(true)
@@ -118,7 +118,7 @@ export function ShopProvider({ children }) {
         .map((line) => {
           const product = getProduct(line.productId)
           if (!product) return null
-          const unitPrice = priceFor(product, line.size)
+          const unitPrice = priceFor(product, line.size, line.stitch)
           return {
             ...line,
             product,

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, Truck } from 'lucide-react'
 import Breadcrumbs from '../components/Breadcrumbs'
 import { useShop } from '../context/ShopContext'
-import { formatPrice, FREE_SHIPPING_THRESHOLD } from '../utils/format'
+import { formatPrice, variantLabel, FREE_SHIPPING_THRESHOLD } from '../utils/format'
 
 export default function Cart() {
   const { items, totals, updateQuantity, removeLine, clearCart, count } = useShop()
@@ -77,7 +77,7 @@ export default function Cart() {
                             {item.product.fabric}
                           </p>
                           <p className="mt-1 text-xs text-ink-500">
-                            Size {item.size} · {item.color}
+                            Size {variantLabel(item)} · {item.color}
                           </p>
                         </div>
 

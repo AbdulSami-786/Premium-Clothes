@@ -28,8 +28,16 @@ import {
   getShades,
   getSizesFor,
   priceFor,
+  canStitch,
+  STITCH_PRICE,
+  STITCH_SIZES,
 } from '../data/products'
-import { formatPrice, discountPercent, FREE_SHIPPING_THRESHOLD } from '../utils/format'
+import {
+  formatPrice,
+  discountPercent,
+  variantLabel,
+  FREE_SHIPPING_THRESHOLD,
+} from '../utils/format'
 import { ONLINE_PAYMENTS } from '../data/config'
 
 export default function ProductDetail() {
@@ -52,10 +60,16 @@ function ProductView({ product }) {
     const options = getSizesFor(product)
     return options.length === 1 ? options[0] : null
   })
+  /* Stitching is an optional add-on for unstitched cloth: off by default, and
+     once on it needs a stitch size (S–XL). */
+  const [stitching, setStitching] = useState(false)
+  const [stitchSize, setStitchSize] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [error, setError] = useState('')
+  const [stitchError, setStitchError] = useState('')
   const [added, setAdded] = useState(false)
   const sizeRef = useRef(null)
+  const stitchRef = useRef(null)
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -71,7 +85,9 @@ function ProductView({ product }) {
   const collection = getCollection(product.collection)
   const shades = getShades(product)
   const sizes = getSizesFor(product)
-  const price = priceFor(product, size)
+  const stitchable = canStitch(product)
+  const stitch = stitchable && stitching ? stitchSize : null
+  const price = priceFor(product, size, stitch)
   const off = discountPercent(price, product.compareAt)
   const related = getRelated(product)
   const wished = isWishlisted(product.id)
@@ -83,8 +99,14 @@ function ProductView({ product }) {
       sizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
+    if (stitchable && stitching && !stitchSize) {
+      setStitchError('Please choose a stitching size')
+      stitchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
     setError('')
-    addToCart(product, { size, color, quantity })
+    setStitchError('')
+    addToCart(product, { size, color, quantity, stitch })
     setAdded(true)
     setTimeout(() => setAdded(false), 2200)
   }
@@ -264,6 +286,88 @@ function ProductView({ product }) {
               </AnimatePresence>
             </div>
 
+            {stitchable && (
+              <div ref={stitchRef} className="mt-6 scroll-mt-28">
+                <p className="label">Stitching</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: false, label: 'No stitching' },
+                    { value: true, label: `Simple stitch +${formatPrice(STITCH_PRICE)}` },
+                  ].map((opt) => (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      aria-pressed={stitching === opt.value}
+                      onClick={() => {
+                        setStitching(opt.value)
+                        if (!opt.value) setStitchSize(null)
+                        setStitchError('')
+                      }}
+                      className={`min-h-11 rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 ${
+                        stitching === opt.value
+                          ? 'border-ink-900 bg-ink-900 text-white'
+                          : 'border-ink-200 text-ink-600 hover:border-ink-900'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                <AnimatePresence initial={false}>
+                  {stitching && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <p className="label mt-4">
+                        Stitching size
+                        {stitchSize && <span className="text-ink-900">: {stitchSize}</span>}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {STITCH_SIZES.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => {
+                              setStitchSize(s)
+                              setStitchError('')
+                            }}
+                            className={`min-h-11 min-w-[3.25rem] rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 ${
+                              stitchSize === s
+                                ? 'border-ink-900 bg-ink-900 text-white'
+                                : 'border-ink-200 text-ink-600 hover:border-ink-900'
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-xs text-ink-400">
+                        {formatPrice(STITCH_PRICE)} is added to the price of the fabric.
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {stitchError && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="mt-2 text-xs font-medium text-blush-600"
+                    >
+                      {stitchError}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <div className="flex items-center rounded-full border border-ink-200">
                 <button
@@ -378,6 +482,7 @@ function ProductView({ product }) {
       <BuyBar
         price={price}
         size={size}
+        stitch={stitch}
         added={added}
         onAdd={handleAdd}
         from={product.lengths?.length > 1 && !size}
@@ -405,7 +510,7 @@ function ProductView({ product }) {
 }
 
 /** Sticky add-to-bag bar for phones; the in-page controls cover larger screens. */
-function BuyBar({ price, size, added, onAdd, from }) {
+function BuyBar({ price, size, stitch, added, onAdd, from }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-4 border-t border-ink-100 bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl lg:hidden">
       <div className="min-w-0">
@@ -414,7 +519,7 @@ function BuyBar({ price, size, added, onAdd, from }) {
           {formatPrice(price)}
         </p>
         <p className="mt-1 truncate text-[0.68rem] text-ink-400">
-          {size ? size : 'Choose an option'}
+          {size ? variantLabel({ size, stitch }) : 'Choose an option'}
         </p>
       </div>
       <button

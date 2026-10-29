@@ -340,9 +340,19 @@ export const getSizesFor = (product) => {
   return getCategory(product.category)?.type === 'stitched' ? SIZES_STITCHED : SIZES_UNSTITCHED
 }
 
-/** Unit price for a chosen size — products sold by length price each one separately. */
-export const priceFor = (product, size) =>
-  product.lengths?.find((l) => l.label === size)?.price ?? product.price
+/* Optional stitching for unstitched cloth. KEEP IN SYNC with STITCH_PRICE and
+   STITCH_SIZES in apps-script/Code.gs, which prices the order server-side. */
+export const STITCH_PRICE = 3000
+export const STITCH_SIZES = ['S', 'M', 'L', 'XL']
+
+/** Stitching is only offered on cloth sold by the length. */
+export const canStitch = (product) => getCategory(product.category)?.type === 'unstitched'
+
+/** Unit price for a chosen size — products sold by length price each one separately.
+    A stitch size adds the flat stitching charge on top of the fabric. */
+export const priceFor = (product, size, stitch) =>
+  (product.lengths?.find((l) => l.label === size)?.price ?? product.price) +
+  (stitch && canStitch(product) ? STITCH_PRICE : 0)
 
 /** Picture for a chosen colour, falling back to the product's main shot. */
 export const imageFor = (product, color) => product.colorImages?.[color] ?? product.images[0]

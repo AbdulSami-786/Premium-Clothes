@@ -14,7 +14,14 @@ import Hero from '../components/Hero'
 import ProductCard from '../components/ProductCard'
 import SectionHeading from '../components/SectionHeading'
 import Reveal, { RevealGroup, RevealItem } from '../components/Reveal'
-import { CATEGORIES, COLLECTIONS, PRODUCTS, getCategory, rangeLabel } from '../data/products'
+import {
+  CATEGORIES,
+  COLLECTIONS,
+  PRODUCTS,
+  STITCH_PRICE,
+  getCategory,
+  rangeLabel,
+} from '../data/products'
 import { FABRIC, MEN, WIDE, WOMEN } from '../data/images'
 import { formatPrice, FREE_SHIPPING_THRESHOLD } from '../utils/format'
 import { ONLINE_PAYMENTS, SOCIAL } from '../data/config'
@@ -23,10 +30,10 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <TrustStrip />
       <CategoryTiles />
       <CollectionTiles />
       <CollectionRows />
+      <TrustStrip />
       <CraftBanner />
       <InstagramStrip />
     </>
@@ -54,12 +61,16 @@ const TRUST = [
     title: ONLINE_PAYMENTS ? 'Secure checkout' : 'Cash on delivery',
     copy: ONLINE_PAYMENTS ? 'Card, wallet or cash on delivery' : 'Pay when your order arrives',
   },
-  { icon: Scissors, title: 'Tailoring add-on', copy: 'Stitching available on request' },
+  {
+    icon: Scissors,
+    title: 'Tailoring add-on',
+    copy: `Simple stitch for ${formatPrice(STITCH_PRICE)} on any unstitched suit`,
+  },
 ]
 
 function TrustStrip() {
   return (
-    <section className="border-b border-ink-100 bg-white">
+    <section className="border-y border-ink-100 bg-white">
       <RevealGroup className="container-px grid grid-cols-2 gap-x-6 gap-y-8 py-10 lg:grid-cols-4">
         {TRUST.map(({ icon: Icon, title, copy }) => (
           <RevealItem key={title} className="flex items-start gap-3.5">

@@ -5,6 +5,7 @@
 
 import { ONLINE_PAYMENTS, STORE } from './config'
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT_RATE, formatPrice } from '../utils/format'
+import { STITCH_PRICE } from './products'
 
 export const POLICIES = {
   shipping: {
@@ -99,7 +100,7 @@ export const POLICIES = {
       {
         heading: 'Can you stitch an unstitched suit for me?',
         body: [
-          'Yes. Message us on WhatsApp after placing your order with your measurements. Stitching adds PKR 2,500–4,500 depending on the design and roughly 7 working days.',
+          `Yes. On any unstitched product page, choose "Simple stitch" and pick your size (S, M, L or XL). It adds ${formatPrice(STITCH_PRICE)} to the price and takes roughly 7 working days.`,
         ],
       },
       {

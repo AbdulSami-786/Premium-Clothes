@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Minus, Plus, ShoppingBag, Trash2, Truck, X } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
-import { formatPrice, FREE_SHIPPING_THRESHOLD } from '../utils/format'
+import { formatPrice, variantLabel, FREE_SHIPPING_THRESHOLD } from '../utils/format'
 
 export default function CartDrawer() {
   const { cartOpen, closeCart, items, totals, updateQuantity, removeLine, count } = useShop()
@@ -133,7 +133,7 @@ export default function CartDrawer() {
                             {item.product.name}
                           </Link>
                           <p className="mt-1 text-xs text-ink-400">
-                            {item.size} · {item.color}
+                            {variantLabel(item)} · {item.color}
                           </p>
 
                           <div className="mt-auto flex items-center justify-between pt-3">

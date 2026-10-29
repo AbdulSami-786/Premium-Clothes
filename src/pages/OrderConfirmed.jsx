@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check, Package, Mail, MapPin } from 'lucide-react'
-import { formatPrice } from '../utils/format'
+import { formatPrice, variantLabel } from '../utils/format'
 import { apiConfigured } from '../utils/api'
 
 const PAYMENT_LABELS = {
@@ -140,7 +140,7 @@ export default function OrderConfirmed() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-ink-900">{item.name}</p>
                   <p className="mt-0.5 text-xs text-ink-400">
-                    {item.size} · {item.color} · Qty {item.quantity}
+                    {variantLabel(item)} · {item.color} · Qty {item.quantity}
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-ink-900">
